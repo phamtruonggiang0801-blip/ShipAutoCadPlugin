@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF> 
+    <LangVersion>latest</LangVersion>
+    <Platforms>x64</Platforms>
+    <PluginName>SDS</PluginName>
+    <Timestamp>$([System.DateTime]::Now.ToString("yyyyMMdd_HHmmss"))</Timestamp>
+    <AssemblyName>$(PluginName)_$(Timestamp)</AssemblyName>
+    
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="WindowsFormsIntegration" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+    
+    <Reference Include="autodesk.inventor.interop">
+      <HintPath>C:\Program Files\Autodesk\Inventor 2023\Bin\Public Assemblies\autodesk.inventor.interop.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoCAD.NET" Version="23.1.0" ExcludeAssets="runtime" />
+    <PackageReference Include="AutoCAD.NET.Model" Version="23.1.0" ExcludeAssets="runtime" />
+    <PackageReference Include="AutoCAD.NET.Core" Version="23.1.0" ExcludeAssets="runtime" />
+    <PackageReference Include="ClosedXML" Version="0.95.4" />
+    <PackageReference Include="EPPlus" Version="6.2.8" />
+    
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+</Project>

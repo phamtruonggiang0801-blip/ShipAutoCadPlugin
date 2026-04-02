@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Structure Tools - User Guide</title>
+    <style>
+        :root {
+            --primary: #333333;
+            --secondary: #555555;
+            --accent-blue: #0055A5;
+            --accent-green: #006633;
+            --bg-light: #F9F9F9;
+            --border: #DEDEDE;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--primary);
+            background-color: #F0F0F0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            padding: 30px 40px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .lang-nav {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed var(--border);
+        }
+        .lang-nav a {
+            text-decoration: none;
+            color: var(--accent-blue);
+            font-weight: bold;
+            padding: 8px 15px;
+            border: 1px solid var(--accent-blue);
+            border-radius: 3px;
+            margin: 0 5px;
+            transition: all 0.2s ease;
+        }
+        .lang-nav a:hover {
+            background-color: var(--accent-blue);
+            color: #FFF;
+        }
+        h1 {
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            margin-top: 0;
+            text-transform: uppercase;
+        }
+        h2 {
+            color: var(--primary);
+            border-left: 4px solid var(--secondary);
+            padding-left: 10px;
+            background-color: var(--bg-light);
+            margin-top: 30px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: var(--secondary);
+            margin-top: 20px;
+        }
+        p {
+            margin-bottom: 10px;
+        }
+        ul {
+            margin-top: 5px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .note {
+            background-color: #FFF3CD;
+            border-left: 4px solid #FFECB5;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 2px;
+        }
+        .warning {
+            background-color: #F8D7DA;
+            border-left: 4px solid #F5C6CB;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 2px;
+        }
+        code {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Consolas, monospace;
+            font-size: 0.95em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: var(--bg-light);
+        }
+        .lang-section {
+            margin-bottom: 60px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="lang-nav">
+        <a href="#english">English Version</a>
+        <a href="#vietnamese">Phiên bản Tiếng Việt</a>
+    </div>
+
+    <div id="english" class="lang-section">
+        <h1>Panel Structure Tools <br><small style="font-size: 0.5em; color: #555; font-weight: normal;">Plugin User Guide</small></h1>
+        
+        <p>Welcome to the user guide for <strong>Panel Structure Tools</strong>. This minimalist tool is designed to automate Panel extraction, Detail positioning, smart labeling, and two-way data synchronization (BIM) directly with Vault Excel spreadsheets.</p>
+
+        <div class="note">
+            <strong>"Single Source of Truth" Rule:</strong> For geometric parameters (Area, Coordinates, Detail Quantity), <strong>the CAD Drawing is the Absolute Truth</strong>. Do not manually edit Panel/Detail data in Excel. If changes occur, modify the CAD drawing and Push the data back to Excel.
+        </div>
+
+        <h2>1. GLOBAL VAULT EXCEL SYNC</h2>
+        <p>This area manages the data flow between the CAD drawing and the Excel file (Bill of Materials & Revision History) located on the server/Vault.</p>
+        <ul>
+            <li><code>[...]</code>: Click this button to browse to the Excel file for synchronization. You can select an existing file or type a new filename for the Tool to create automatically.</li>
+            <li><code>Sync Sheet & Revision (Tab 1 & 2)</code>: Synchronizes data for drawing frames (A1) and Revision History.</li>
+            <li><code>Sync Panel Engineering (Tab 3)</code>: Pushes Geometric data (Panel, Area, Detail, Qty) from CAD's RAM to the Excel spreadsheet.</li>
+            <li><strong>[Pull Data] Button:</strong> Pulls data from Excel to CAD. This feature automatically reads the revision history (Tab 2) and creates/updates Amendment Blocks stamped on the CAD drawing.</li>
+            <li><strong>[Push Data] Button:</strong> Pushes data from CAD to Excel based on the selected Checkboxes. Data in Tab 1 & 2 will be Safely Merged, while data in Tab 3 will be completely overwritten with the latest data from CAD.</li>
+        </ul>
+
+        <h2>2. PANEL AUTOMATION</h2>
+        <p>This area automates the extraction of ship panels and the layout of Lifting Lugs and Guides.</p>
+        <ul>
+            <li><code>Deck No</code>: Enter the Deck number (e.g., type <strong>6</strong>, the Tool will auto-generate Panel names like <em>Deck 6 - 601C</em>, <em>601P</em>...).</li>
+            <li><code>Guiding Mode</code>: Select the guide bracket type. <strong>Guide 3</strong> is a smart 3-prong clamp, <strong>Guide 2</strong> is a standard perpendicular corner bracket.</li>
+            <li><strong>[Scan & Name Panels] Button:</strong> 
+                <ol>
+                    <li>Click to select the Centerline (From Aft to Forward).</li>
+                    <li>Window Select the entire deck polygon area.</li>
+                    <li>The Tool will automatically filter, close gaps, assign names (C/P/S), distribute Balloons, attach Guides, and load the absolute precise polygon boundaries into RAM.</li>
+                </ol>
+            </li>
+            <li><strong>[Add Point (Manual)] Button:</strong> Add manual operation points. Click the button and look at the CAD Command Line to choose:
+                <ul>
+                    <li><code>[Balloon]</code>: Click to place additional manual lifting lugs.</li>
+                    <li><code>[Guide2 / Guide3]</code>: Click to attach additional guide brackets manually.</li>
+                    <li><code>[UpdateSymbol]</code>: Batch select existing Balloons to change their force symbols (Batch change to T1, T2, or T3).</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>3. PLAN VIEW TOOLS</h2>
+        <p>Plan view processing tools, integrated with Artificial Intelligence for smart labeling and an Audit Interface.</p>
+        <ul>
+            <li><strong>[Open Panel Data] Button:</strong> Opens the Modeless Dashboard. Here, click the <strong>Scan Drawing</strong> button and select the Detail Block clusters. The X-Ray and Polygon Intersection algorithms will run in the background to accurately count the number of Details belonging to each Panel.</li>
+            <li><strong>[Generate Labels] Button:</strong> Select Detail Blocks (or Master Block). The AI (Spatial Hashing algorithm) will automatically generate "Detail X" text and attach it to one of the 4 corners of the Detail frame to minimize collision (overlapping lines) with surrounding objects. Defaults to prioritizing the vertical CenterX axis.</li>
+            <li><strong>[Update by Proximity] Button:</strong> Automatically updates the content of old Texts on the drawing to Detail names based on physical proximity (The Text closest to a Detail will adopt that Detail's name).</li>
+        </ul>
+
+        <h2>4. DETAIL VIEW TOOLS</h2>
+        <p>System for managing Shop Drawings (A1 Frame) and Revision History.</p>
+        <ul>
+            <li><code>Global Revision Bump</code>: Check this box if you want to upgrade the Revision (e.g., from REV.A to REV.B) for ALL drawings currently in the list simultaneously.</li>
+            <li><strong>[Sync & Update Sheet] Button:</strong> Scans A1 Frame Blocks on the drawing. The Tool will gather the entire drawing list into the DataGrid below. It also supports Auto-Heal (automatically restoring deleted Texts) when pulling data from Excel.</li>
+            <li><strong>[Create Rev Block] Button:</strong> Select one (or multiple) rows in the DataGrid, enter Revision content. Click this button, and the Tool will automatically stack the Revision History Blocks neatly above the Title Block without overlapping.</li>
+            <li><strong>DataGrid (Sheets & Revs):</strong> Central control panel. You can Click to select and automatically Pan/Zoom the drawing to the corresponding A1 frame on the CAD screen.</li>
+        </ul>
+
+        <hr style="margin-top: 40px; border: 0; border-top: 1px solid var(--border);">
+        <h3>Appendix: Force Symbols System</h3>
+        <p>The Tool uses standard White Solid Hatch (prints as solid Black) to represent force application points:</p>
+        <table>
+            <tr>
+                <th width="20%">Symbol Type</th>
+                <th width="25%">Shape</th>
+                <th>Meaning (Standard)</th>
+            </tr>
+            <tr>
+                <td><strong>T1</strong></td>
+                <td>▲ Triangle</td>
+                <td>Vertical force (Used for Deck, Stowed & Lifting positions). This is the common type and assigned by default.</td>
+            </tr>
+            <tr>
+                <td><strong>T2</strong></td>
+                <td>■ Square</td>
+                <td>Vertical force (Used for Deck & Stowed positions).</td>
+            </tr>
+            <tr>
+                <td><strong>T3</strong></td>
+                <td>● Circle</td>
+                <td>Vertical force (Used only for Deck position).</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="vietnamese" class="lang-section">
+        <h1>Panel Structure Tools <br><small style="font-size: 0.5em; color: #555; font-weight: normal;">Hướng dẫn sử dụng Plugin</small></h1>
+        
+        <p>Chào mừng bạn đến với tài liệu hướng dẫn sử dụng <strong>Panel Structure Tools</strong>. Tool được thiết kế tối giản nhằm tự động hóa quy trình bóc tách Panel, định vị Detail, dán nhãn thông minh và đồng bộ dữ liệu hai chiều (BIM) trực tiếp với bảng tính Excel Vault.</p>
+
+        <div class="note">
+            <strong>Quy tắc "Single Source of Truth":</strong> Đối với thông số hình học (Diện tích, Tọa độ, Số lượng Detail), <strong>Bản vẽ CAD là Chân lý</strong>. Không sửa thủ công dữ liệu Panel/Detail trên Excel. Nếu có thay đổi, hãy sửa trên CAD và đẩy (Push) lại lên Excel.
+        </div>
+
+        <h2>1. GLOBAL VAULT EXCEL SYNC</h2>
+        <p>Khu vực này quản lý luồng dữ liệu giao tiếp giữa bản vẽ CAD và file Excel (Bill of Materials & Revision History) đặt trên hệ thống máy chủ/Vault.</p>
+        <ul>
+            <li><code>[...]</code>: Nhấn vào nút này để trỏ đường dẫn tới file Excel cần đồng bộ. Bạn có thể chọn file có sẵn hoặc gõ tên file mới để Tool tự tạo.</li>
+            <li><code>Sync Sheet & Revision (Tab 1 & 2)</code>: Cho phép đồng bộ dữ liệu quản lý Khung bản vẽ (A1) và Lịch sử sửa đổi (Revision).</li>
+            <li><code>Sync Panel Engineering (Tab 3)</code>: Cho phép đẩy dữ liệu Hình học (Panel, Area, Detail, Qty) từ bộ nhớ RAM của CAD ra bảng tính Excel.</li>
+            <li><strong>Nút [Pull Data]:</strong> Kéo dữ liệu từ Excel về CAD. Tính năng này sẽ tự động đọc lịch sử sửa đổi (Tab 2) và tự động tạo/cập nhật các Block Amendment dập lên bản vẽ CAD.</li>
+            <li><strong>Nút [Push Data]:</strong> Đẩy dữ liệu từ CAD lên Excel dựa theo các Checkbox bạn đã chọn. Dữ liệu Tab 1 & 2 sẽ được Merge (ghép nối an toàn), trong khi dữ liệu Tab 3 sẽ được ghi đè hoàn toàn bằng dữ liệu mới nhất từ CAD.</li>
+        </ul>
+
+        <h2>2. PANEL AUTOMATION</h2>
+        <p>Khu vực tự động hóa bóc tách khoang tàu (Panel) và bố trí điểm nâng hạ (Lifting Lugs) cùng cữ dẫn hướng (Guides).</p>
+        <ul>
+            <li><code>Deck No</code>: Điền số thứ tự của Boong (VD: gõ <strong>6</strong>, Tool sẽ tự sinh tên Panel là <em>Deck 6 - 601C</em>, <em>601P</em>...).</li>
+            <li><code>Guiding Mode</code>: Chọn kiểu ngàm dẫn hướng. <strong>Guide 3</strong> là ngàm kẹp 3 râu thông minh, <strong>Guide 2</strong> là ke góc vuông góc thông thường.</li>
+            <li><strong>Nút [Scan & Name Panels]:</strong> 
+                <ol>
+                    <li>Click chọn đường Centerline (Từ Đuôi tàu hướng về Mũi tàu).</li>
+                    <li>Quét chuột (Window Select) toàn bộ khu vực đa giác mặt boong.</li>
+                    <li>Tool sẽ tự động lọc, vá nét, đánh tên (C/P/S), rải Balloon, dán Guide và nạp bộ khung đa giác chính xác tuyệt đối vào RAM.</li>
+                </ol>
+            </li>
+            <li><strong>Nút [Add Point (Manual)]:</strong> Thêm các điểm thao tác thủ công. Bấm nút và nhìn xuống Command Line của CAD để chọn:
+                <ul>
+                    <li><code>[Balloon]</code>: Click để rải thêm điểm nâng hạ thủ công.</li>
+                    <li><code>[Guide2 / Guide3]</code>: Click để gắn thêm cữ dẫn hướng bằng tay.</li>
+                    <li><code>[UpdateSymbol]</code>: Quét hàng loạt các Balloon có sẵn để đổi ký hiệu lực (Đổi hàng loạt sang T1, T2, hoặc T3).</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>3. PLAN VIEW TOOLS</h2>
+        <p>Các công cụ xử lý trên mặt bằng (Plan View), tích hợp Trí tuệ Nhân tạo để dán nhãn (Labeling) và Giao diện Kiểm toán (Audit).</p>
+        <ul>
+            <li><strong>Nút [Open Panel Data]:</strong> Mở cửa sổ Dashboard (Modeless). Tại đây, bấm nút <strong>Scan Drawing</strong> và quét các cụm Detail Block. Thuật toán X-Ray và Giao cắt Đa Giác (Polygon Intersection) sẽ chạy ngầm để đếm chính xác số lượng Detail thuộc về từng Panel.</li>
+            <li><strong>Nút [Generate Labels]:</strong> Quét các Detail Block (Hoặc Master Block). AI (Thuật toán Spatial Hashing) sẽ tự động tạo chữ "Detail X" và gắn vào 1 trong 4 góc của khung Detail sao cho ít bị va chạm (đè nét) với các nét vẽ xung quanh nhất. Mặc định ưu tiên trục dọc CenterX.</li>
+            <li><strong>Nút [Update by Proximity]:</strong> Tự động sửa nội dung của các Text cũ trên bản vẽ thành tên Detail dựa theo khoảng cách vật lý (Text nào nằm gần Detail nào nhất sẽ lấy tên của Detail đó).</li>
+        </ul>
+
+        <h2>4. DETAIL VIEW TOOLS</h2>
+        <p>Hệ thống quản lý Bản vẽ xuất xưởng (A1 Frame) và Lịch sử cập nhật (Revision History).</p>
+        <ul>
+            <li><code>Global Revision Bump</code>: Tích vào đây nếu bạn muốn nâng hạng Revision (VD: từ REV.A lên REV.B) cho TOÀN BỘ các bản vẽ đang có trong danh sách cùng một lúc.</li>
+            <li><strong>Nút [Sync & Update Sheet]:</strong> Quét các Block Khung A1 trên bản vẽ. Tool sẽ gom toàn bộ danh sách bản vẽ vào Bảng DataGrid phía dưới. Nó cũng hỗ trợ Auto-Heal (tự động phục hồi Text bị xóa) nếu kéo dữ liệu từ Excel về.</li>
+            <li><strong>Nút [Create Rev Block]:</strong> Chọn một (hoặc nhiều) dòng trong bảng DataGrid, nhập nội dung Revision. Bấm nút này, Tool sẽ tự động xếp chồng (Stack) các Block Lịch sử sửa đổi ngay ngắn phía trên khung tên (Title Block) mà không bị đè lên nhau.</li>
+            <li><strong>DataGrid (Sheets & Revs):</strong> Bảng điều khiển trung tâm. Bạn có thể Click chọn để tự động Pan/Zoom bản vẽ tới khung A1 tương ứng trên màn hình CAD.</li>
+        </ul>
+
+        <hr style="margin-top: 40px; border: 0; border-top: 1px solid var(--border);">
+        <h3>Phụ lục: Hệ thống Ký hiệu Lực (Force Symbols)</h3>
+        <p>Tool sử dụng tiêu chuẩn Hatch đặc (Solid) màu Trắng (khi in ra giấy sẽ là nét mực Đen đậm) để thể hiện các điểm tác dụng lực:</p>
+        <table>
+            <tr>
+                <th width="20%">Loại Ký hiệu</th>
+                <th width="25%">Hình dáng</th>
+                <th>Ý nghĩa (Standard)</th>
+            </tr>
+            <tr>
+                <td><strong>T1</strong></td>
+                <td>▲ Tam giác</td>
+                <td>Vertical force (Sử dụng cho vị trí Deck, Stowed & Lifting). Đây là loại thông dụng và được gán mặc định.</td>
+            </tr>
+            <tr>
+                <td><strong>T2</strong></td>
+                <td>■ Hình vuông</td>
+                <td>Vertical force (Sử dụng cho vị trí Deck & Stowed).</td>
+            </tr>
+            <tr>
+                <td><strong>T3</strong></td>
+                <td>● Hình tròn</td>
+                <td>Vertical force (Chỉ sử dụng riêng cho vị trí Deck).</td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>

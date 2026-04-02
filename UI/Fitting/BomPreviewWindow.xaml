@@ -1,0 +1,96 @@
+<Window x:Class="ShipAutoCadPlugin.UI.BomPreviewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BOM Matrix Preview &amp; Export" Height="700" Width="1300"
+        WindowStartupLocation="CenterScreen" Topmost="True"
+        Background="#FFF0F0F0" FontFamily="Segoe UI">
+
+    <Window.Resources>
+        <Style TargetType="Button" x:Key="PrimaryButtonStyle">
+            <Setter Property="Background" Value="#FF0055A5"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF004080"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="Button" x:Key="ActionButtonStyle">
+            <Setter Property="Background" Value="#FF28A745"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF218838"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#FFE8E8E8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="6,8"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="BorderBrush" Value="#FFDEDEDE"/>
+            <Setter Property="Foreground" Value="#FF333333"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> 
+            <RowDefinition Height="*"/>    
+            <RowDefinition Height="Auto"/> 
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="White" BorderBrush="#FFDEDEDE" BorderThickness="1" Padding="10" Margin="0,0,0,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="BOM Type:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,15,0" Foreground="#FF333333"/>
+                    
+                    <RadioButton x:Name="RadioStructure" Content="Structure (Panel BOM)" IsChecked="True" VerticalAlignment="Center" Margin="0,0,20,0" FontWeight="SemiBold" Foreground="#FF0055A5"/>
+                    <RadioButton x:Name="RadioHull" Content="Interface (Hull Matrix)" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#FF0055A5"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnScanDrawing" Content="🔍 Scan &amp; Count from Drawing" Width="200" Style="{StaticResource PrimaryButtonStyle}" Click="BtnScanDrawing_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Background="White" BorderBrush="#FFDEDEDE" BorderThickness="1">
+            <DataGrid x:Name="GridBomMatrix" 
+                      AutoGenerateColumns="True" 
+                      CanUserAddRows="False" 
+                      SelectionMode="Extended"
+                      RowHeight="26"
+                      AlternatingRowBackground="#FFF9F9F9"
+                      HorizontalGridLinesBrush="#FFEEEEEE"
+                      VerticalGridLinesBrush="#FFEEEEEE"
+                      AutoGeneratingColumn="GridBomMatrix_AutoGeneratingColumn">
+            </DataGrid>
+        </Border>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <TextBlock x:Name="TxtStatus" Text="Ready to scan." VerticalAlignment="Center" Margin="0,0,20,0" FontStyle="Italic" Foreground="#FF666666"/>
+            
+            <Button x:Name="BtnAutoBalloon" Content="🔢 Auto-Assign Positions" Width="180" Margin="0,0,10,0" Click="BtnAutoBalloon_Click"/>
+            
+            <Button x:Name="BtnSyncPosToCad" Content="🔄 Sync Pos to CAD" Width="180" Margin="0,0,10,0" Style="{StaticResource PrimaryButtonStyle}" Click="BtnSyncPosToCad_Click"/>
+            
+            <Button x:Name="BtnExportExcel" Content="📊 Export to Excel" Width="150" Style="{StaticResource ActionButtonStyle}" Click="BtnExportExcel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

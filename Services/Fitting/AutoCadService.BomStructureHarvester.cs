@@ -45,34 +45,35 @@ namespace ShipAutoCadPlugin.Services
                             ((BlockTableRecord)tr.GetObject(panelRef.DynamicBlockTableRecord, OpenMode.ForRead)).Name : 
                             panelRef.Name;
                             
-                        // Cắt bỏ các tiền tố/hậu tố để lấy tên chuẩn (Ví dụ: "New 6D-01P" -> "6D-01P")
                         panelName = CleanPanelName(panelName);
-
                         ed.WriteMessage($"\n>>> PROCESSING PANEL: {panelName}");
 
-                        // Dictionary đếm số lượng Fitting thô trong 1 Panel
-                        Dictionary<string, int> localCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                        // ==========================================================
+                        // [NÂNG CẤP LỘ TRÌNH 2]: Đổi Dictionary từ Int sang List<ObjectId>
+                        // ==========================================================
+                        Dictionary<string, List<ObjectId>> localInstances = new Dictionary<string, List<ObjectId>>(StringComparer.OrdinalIgnoreCase);
 
                         BlockTableRecord btr = tr.GetObject(panelRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
                         
-                        // 2. Đệ quy đếm các Block con bên trong Panel
-                        ScanNestedBlocks(btr, tr, localCounts);
+                        // 2. Đệ quy đếm các Block con và gom ObjectId
+                        ScanNestedBlocks(btr, tr, localInstances, panelRef.ObjectId);
 
                         // 3. APPLY BUSINESS LOGIC (Wire Rope, Thimble, Clamp)
-                        ApplyStructureLogic(btr, tr, localCounts, panelRef.ScaleFactors.X);
+                        ApplyStructureLogic(btr, tr, localInstances, panelRef.ScaleFactors.X);
 
                         // 4. Map dữ liệu vào Model
-                        foreach (var kvp in localCounts)
+                        foreach (var kvp in localInstances)
                         {
                             allRecords.Add(new BomHarvestRecord
                             {
                                 PanelName = panelName,
-                                VaultName = kvp.Key, // Đây là mã Block hoặc Part ID sinh ra từ logic
-                                PartId = kvp.Key,    // Sẽ được hệ thống Pivot/Lookup phân giải tên thực tế sau
-                                Quantity = kvp.Value,
+                                VaultName = kvp.Key, 
+                                PartId = kvp.Key,    
+                                Quantity = kvp.Value.Count,   // [UPDATE]: Số lượng = độ dài của danh sách ID
                                 ParentBlockName = panelRef.Name,
-                                XClass = "N/A",      // Khởi tạo giá trị mặc định tránh lỗi Null
-                                Description = "Harvested from CAD"
+                                XClass = "N/A",      
+                                Description = "Harvested from CAD",
+                                InstanceIds = kvp.Value       // [CHÍ TỬ]: Nhét cái túi ID này vào Record để chốc nữa Sync
                             });
                         }
                     }
@@ -82,8 +83,8 @@ namespace ShipAutoCadPlugin.Services
             return allRecords;
         }
 
-        // --- ĐỆ QUY ĐẾM BLOCK (Có tích hợp Bộ lọc BOM_TYPE) ---
-        private void ScanNestedBlocks(BlockTableRecord btr, Transaction tr, Dictionary<string, int> counts)
+        // --- ĐỆ QUY ĐẾM BLOCK VÀ NHẶT OBJECT ID ---
+        private void ScanNestedBlocks(BlockTableRecord btr, Transaction tr, Dictionary<string, List<ObjectId>> instances, ObjectId parentBlockId)
         {
             foreach (ObjectId id in btr)
             {
@@ -96,75 +97,74 @@ namespace ShipAutoCadPlugin.Services
 
                     if (nestedName.ToUpper().Contains("CAS"))
                     {
-                        // ========================================================
-                        // [BỘ LỌC THÔNG MINH BOM_TYPE]: Đọc thẻ tàng hình
-                        // ========================================================
                         string bomType = GetAttributeValue(tr, nestedRef, "BOM_TYPE").ToUpper();
 
-                        // Nếu vật tư này đã bị Leader đóng dấu là của DETAIL (hoặc HULL) lúc tạo thư viện
-                        // Ta sẽ lập tức bỏ qua nó (Bởi vì nó sẽ được đếm ở mặt trận Interface)
+                        // Bộ lọc BOM_TYPE
                         if (bomType != "DETAIL" && bomType != "HULL")
                         {
                             string cleanName = CleanVaultName(nestedName);
-                            if (counts.ContainsKey(cleanName)) counts[cleanName]++;
-                            else counts.Add(cleanName, 1);
+                            
+                            // Nhét ID của cái Block con này vào giỏ
+                            if (!instances.ContainsKey(cleanName))
+                            {
+                                instances.Add(cleanName, new List<ObjectId>());
+                            }
+                            instances[cleanName].Add(nestedRef.ObjectId);
                         }
                     }
 
                     // Tiếp tục đào sâu
                     BlockTableRecord nestedBtr = tr.GetObject(nestedRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
-                    ScanNestedBlocks(nestedBtr, tr, counts);
+                    ScanNestedBlocks(nestedBtr, tr, instances, nestedRef.ObjectId);
                 }
             }
         }
 
         // --- APPLY MACGREGOR'S TRIGGERS LOGIC ---
-        private void ApplyStructureLogic(BlockTableRecord btr, Transaction tr, Dictionary<string, int> counts, double parentScale)
+        private void ApplyStructureLogic(BlockTableRecord btr, Transaction tr, Dictionary<string, List<ObjectId>> instances, double parentScale)
         {
-            // (Chưa có class BomTriggers trong context hiện tại nên tôi tạm giả lập các mã cứng để code biên dịch được)
-            // LƯU Ý: Đảm bảo bạn có Class tĩnh BomTriggers.cs chứa các biến hằng số (const) này trong Project!
-            string CAS_150_DEDUCT_1 = "CAS-0012345"; // Thay bằng PartID thực tế
-            string CAS_150_DEDUCT_2 = "CAS-0012346"; // Thay bằng PartID thực tế
-            string CAS_NO_DEDUCT = "CAS-0012347";    // Thay bằng PartID thực tế
-            
-            string WIRE_ROPE_ASSY_PART_ID = "WIRE-ASSY-001";
-            string THIMBLE_PART_ID = "THIMBLE-001";
-            string CLAMP_PART_ID = "CLAMP-001";
-            string WIRE_ROPE_PART_ID = "WIRE-ROPE-001";
-
-            int c1 = counts.ContainsKey(CAS_150_DEDUCT_1) ? counts[CAS_150_DEDUCT_1] : 0;
-            int c2 = counts.ContainsKey(CAS_150_DEDUCT_2) ? counts[CAS_150_DEDUCT_2] : 0;
-            int c3 = counts.ContainsKey(CAS_NO_DEDUCT) ? counts[CAS_NO_DEDUCT] : 0;
+            // Lấy độ dài mảng (Số lượng) của các Trigger
+            int c1 = instances.ContainsKey(BomTriggers.CAS_150_DEDUCT_1) ? instances[BomTriggers.CAS_150_DEDUCT_1].Count : 0;
+            int c2 = instances.ContainsKey(BomTriggers.CAS_150_DEDUCT_2) ? instances[BomTriggers.CAS_150_DEDUCT_2].Count : 0;
+            int c3 = instances.ContainsKey(BomTriggers.CAS_NO_DEDUCT) ? instances[BomTriggers.CAS_NO_DEDUCT].Count : 0;
 
             int triggerForAssembly = c1 + c2;
             int triggerForComponents = c1 + c2 + c3;
 
-            // A. Kích hoạt Wire Rope Assembly
+            // Kích hoạt Assembly và Component ảo (Mấy món này không có Block thực tế nên List ObjectId rỗng)
             if (triggerForAssembly > 0)
             {
-                AddOrUpdateCount(counts, WIRE_ROPE_ASSY_PART_ID, 1 * triggerForAssembly);
+                AddVirtualInstances(instances, BomTriggers.WIRE_ROPE_ASSY_PART_ID, 1 * triggerForAssembly);
             }
 
-            // B. Kích hoạt Thimble, Clamp & Wire Rope Calculation
             if (triggerForComponents > 0)
             {
-                AddOrUpdateCount(counts, THIMBLE_PART_ID, 2 * triggerForComponents);
-                AddOrUpdateCount(counts, CLAMP_PART_ID, 2 * triggerForComponents);
+                AddVirtualInstances(instances, BomTriggers.THIMBLE_PART_ID, 2 * triggerForComponents);
+                AddVirtualInstances(instances, BomTriggers.CLAMP_PART_ID, 2 * triggerForComponents);
 
-                // ĐO DÂY CÁP
                 double rawLengthMm = GetWireRopeLengthRecursive(btr, tr, parentScale);
-                
-                // Khấu trừ 150mm cho c1 và c2
                 double deduction = 150.0 * (c1 + c2);
                 double netLengthMm = rawLengthMm - deduction;
-                if (netLengthMm < 0) netLengthMm = 0;
-
-                // Tính toán ra mét và làm tròn trần (Ceiling + 1)
+                
                 if (netLengthMm > 0)
                 {
                     int finalLengthM = (int)Math.Ceiling(netLengthMm / 1000.0);
-                    AddOrUpdateCount(counts, WIRE_ROPE_PART_ID, finalLengthM);
+                    AddVirtualInstances(instances, BomTriggers.WIRE_ROPE_PART_ID, finalLengthM);
                 }
+            }
+        }
+
+        // --- HÀM HELPER ADD HÀNG ẢO ---
+        // (Nhét n cái ObjectId.Null vào mảng để lừa nó đếm ra n số lượng cho các vật tư ảo không có Block)
+        private void AddVirtualInstances(Dictionary<string, List<ObjectId>> instances, string key, int qty)
+        {
+            if (!instances.ContainsKey(key))
+            {
+                instances.Add(key, new List<ObjectId>());
+            }
+            for (int i = 0; i < qty; i++)
+            {
+                instances[key].Add(ObjectId.Null); 
             }
         }
 
@@ -179,16 +179,12 @@ namespace ShipAutoCadPlugin.Services
                 
                 if (ent is Polyline poly)
                 {
-                    // Lấy Width của Polyline
                     double width = poly.ConstantWidth;
                     if (width == 0 && poly.NumberOfVertices > 0) width = poly.GetStartWidthAt(0);
 
-                    // Nếu Width xấp xỉ 3 -> Là dây cáp
                     if (Math.Abs(width - 3.0) < 0.1)
                     {
                         double itemLen = poly.Length;
-                        
-                        // Lọc bỏ đoạn rác (<200) hoặc đoạn thừa (1350-1450)
                         if (itemLen >= 200 && !(itemLen >= 1350 && itemLen <= 1450))
                         {
                             totalLength += itemLen * currentScale;
@@ -206,12 +202,6 @@ namespace ShipAutoCadPlugin.Services
         }
 
         // --- CÁC HÀM HELPER XỬ LÝ CHUỖI ---
-        private void AddOrUpdateCount(Dictionary<string, int> dict, string key, int qty)
-        {
-            if (dict.ContainsKey(key)) dict[key] += qty;
-            else dict.Add(key, qty);
-        }
-
         private string CleanPanelName(string fullName)
         {
             string clean = fullName.Trim();
@@ -223,7 +213,6 @@ namespace ShipAutoCadPlugin.Services
 
         private string CleanVaultName(string fullName)
         {
-            // Trích xuất mã CAS-xxxxxxx bằng Regex hoặc Substring
             var match = System.Text.RegularExpressions.Regex.Match(fullName, @"CAS-\d{7}");
             return match.Success ? match.Value : fullName;
         }

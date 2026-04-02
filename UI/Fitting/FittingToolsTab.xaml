@@ -41,6 +41,8 @@
                 <StackPanel Margin="0,4">
                     <TextBlock Text="Scan drawings, count fittings, auto-assign balloons, and export BOM matrix to Excel." TextWrapping="Wrap" Foreground="#FF555555" Margin="0,0,0,10"/>
                     <Button x:Name="BtnOpenBomPreview" Content="OPEN BOM EXPORT" Height="30" FontWeight="Bold" Background="#FF28A745" Foreground="White" Click="BtnOpenBomPreview_Click"/>
+                    
+                    <Button x:Name="BtnAddBalloon" Content="Place Smart Balloon" Height="28" FontWeight="SemiBold" Background="#FFFFF2C0" BorderBrush="#FFFFC107" Foreground="#FF333333" Margin="0,8,0,0" Click="BtnAddBalloon_Click" ToolTip="Click continuously to place balloons on fittings"/>
                 </StackPanel>
             </GroupBox>
 
@@ -50,7 +52,6 @@
                     
                     <Button x:Name="BtnRedefineBlocks" Content="Sync/Redefine Blocks" Margin="0,0,0,6" Click="BtnRedefineBlocks_Click"/>
                     <Button x:Name="BtnSmartReplace" Content="Smart Replace (Spatial)" Margin="0,0,0,6" Click="BtnSmartReplace_Click"/>
-                    
                     <Button x:Name="BtnChangeBasePoint" Content="Change Insertion Point" Margin="0,0,0,6" Click="BtnChangeBasePoint_Click"/>
                     <Button x:Name="BtnAddToBlock" Content="Add Objects to Block" Margin="0,0,0,6" Click="BtnAddToBlock_Click"/>
                     <Button x:Name="BtnExtractFromBlock" Content="Extract Objects from Block" Click="BtnExtractFromBlock_Click"/>

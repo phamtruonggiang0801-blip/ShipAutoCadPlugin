@@ -99,6 +99,22 @@ namespace ShipAutoCadPlugin.UI
             }
         }
 
+        // ====================================================================
+        // [SỰ KIỆN MỚI]: Kích hoạt lệnh ADD_BALLOON liên tục qua UI Button
+        // ====================================================================
+        private void BtnAddBalloon_Click(object sender, RoutedEventArgs e)
+        {
+            var doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
+            if (doc != null)
+            {
+                // Trả focus về màn hình CAD để Kỹ sư có thể click được luôn
+                Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView();
+                
+                // Sử dụng SendStringToExecute để "gõ phím ảo" chữ "ADD_BALLOON "
+                doc.SendStringToExecute("ADD_BALLOON ", true, false, false);
+            }
+        }
+
         // =========================================================
         // BLOCK UTILITIES EVENTS
         // =========================================================

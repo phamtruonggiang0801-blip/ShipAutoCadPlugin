@@ -23,10 +23,18 @@ namespace ShipAutoCadPlugin.Services
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            // 1. CHỈ QUÉT CHỌN KHUNG BẢN VẼ (Lọc Dynamic Block an toàn)
+            // =================================================================
+            // [CẬP NHẬT UX]: Bộ lọc kép chặn Highlight rác
+            // Chỉ bắt Block tĩnh tên "A1" hoặc Block động (bắt đầu bằng *U)
+            // Ký tự ` (backtick) dùng để báo cho AutoCAD biết dấu * là ký tự thật, không phải wildcard
+            // =================================================================
             PromptSelectionOptions selOpt = new PromptSelectionOptions();
-            selOpt.MessageForAdding = "\n[Hull Matrix] Select A1 Frames to scan: ";
-            TypedValue[] filter = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
+            selOpt.MessageForAdding = "\nSelect A1 Frames to scan: ";
+            TypedValue[] filter = new TypedValue[] 
+            { 
+                new TypedValue((int)DxfCode.Start, "INSERT"),
+                new TypedValue((int)DxfCode.BlockName, "`*U*,A1") 
+            };
             PromptSelectionResult selRes = ed.GetSelection(selOpt, new SelectionFilter(filter));
             
             if (selRes.Status != PromptStatus.OK) return rawResults;
@@ -53,7 +61,7 @@ namespace ShipAutoCadPlugin.Services
                         if (a1Blk == null || !a1Blk.Bounds.HasValue) continue;
 
                         string a1Name = GetEffectiveName(tr, a1Blk);
-                        // Bỏ qua nếu người dùng lỡ quét nhầm Block không phải A1
+                        // Bỏ qua nếu người dùng lỡ quét nhầm Block Dynamic khác không phải A1
                         if (!a1Name.Equals("A1", StringComparison.OrdinalIgnoreCase)) continue;
 
                         Extents3d a1Ext = a1Blk.GeometricExtents;

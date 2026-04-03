@@ -20,10 +20,10 @@
         </Grid>
 
         <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
-            <TabItem Header="PANEL STRUCTURE">
+            <TabItem Header="INTERFACE">
                 <local:PanelStructureView/>
             </TabItem>
-            <TabItem Header="FITTING TOOLS">
+            <TabItem Header="FITTING">
                 <local:FittingToolsView/>
             </TabItem>
         </TabControl>

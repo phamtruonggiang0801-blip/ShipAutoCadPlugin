@@ -15,7 +15,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 // ====================================================================
-// [FIX]: Đặt bí danh (Alias) để tránh đụng độ thư viện với AutoCAD API
+// Đặt bí danh (Alias) để tránh đụng độ thư viện với AutoCAD API
 // ====================================================================
 using DataTable = System.Data.DataTable;
 using DataColumn = System.Data.DataColumn;
@@ -57,21 +57,40 @@ namespace ShipAutoCadPlugin.UI
             {
                 e.Column.IsReadOnly = true; 
                 Style cellStyle = new Style(typeof(DataGridCell));
+                
+                // Màu nền Xanh nhạt
                 cellStyle.Setters.Add(new Setter(BackgroundProperty, new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(240, 248, 255))));
+                // [FIX LỖI TÀNG HÌNH]: Ép màu chữ đen tĩnh
+                cellStyle.Setters.Add(new Setter(ForegroundProperty, System.Windows.Media.Brushes.Black));
+
+                // [FIX LỖI TÀNG HÌNH]: Ép màu chữ đen khi được click (Selected)
+                Trigger selTrigger = new Trigger { Property = DataGridCell.IsSelectedProperty, Value = true };
+                selTrigger.Setters.Add(new Setter(ForegroundProperty, System.Windows.Media.Brushes.Black));
+                cellStyle.Triggers.Add(selTrigger);
+
                 e.Column.CellStyle = cellStyle;
             }
             else if (e.PropertyName.EndsWith(" Pos"))
             {
                 e.Column.IsReadOnly = false; 
                 Style cellStyle = new Style(typeof(DataGridCell));
+                
+                // Màu nền Vàng nhạt
                 cellStyle.Setters.Add(new Setter(BackgroundProperty, new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 250, 205))));
+                // [FIX LỖI TÀNG HÌNH]: Ép màu chữ đen tĩnh
+                cellStyle.Setters.Add(new Setter(ForegroundProperty, System.Windows.Media.Brushes.Black));
+
+                // [FIX LỖI TÀNG HÌNH]: Ép màu chữ đen khi được click (Selected)
+                Trigger selTrigger = new Trigger { Property = DataGridCell.IsSelectedProperty, Value = true };
+                selTrigger.Setters.Add(new Setter(ForegroundProperty, System.Windows.Media.Brushes.Black));
+                cellStyle.Triggers.Add(selTrigger);
+
                 e.Column.CellStyle = cellStyle;
             }
         }
 
         private void BtnScanDrawing_Click(object sender, RoutedEventArgs e)
         {
-            // [FIXED] Chỉ định rõ System.Windows.Visibility
             this.Visibility = System.Windows.Visibility.Hidden;
 
             try
@@ -80,7 +99,6 @@ namespace ShipAutoCadPlugin.UI
                 bool isInterfaceMode = RadioHull.IsChecked == true;
                 string projectFile = "";
 
-                // Yêu cầu nạp Thư viện Dự án nếu đang quét Hull (Detail)
                 if (isInterfaceMode)
                 {
                     OpenFileDialog ofd = new OpenFileDialog();
@@ -109,12 +127,10 @@ namespace ShipAutoCadPlugin.UI
                     return;
                 }
 
-                // VLOOKUP TỪ THƯ VIỆN: Kéo thông tin chuẩn, Lọc rác & Lấy Project Pos
                 EnrichDataFromCatalog(rawData, isInterfaceMode, projectFile);
 
                 _lastScanResults = rawData; 
 
-                // TẠO CỘT ĐỘNG
                 _bomDataTable.Clear();
                 _bomDataTable.Columns.Clear();
                 _bomDataTable.Columns.Add("Vault Name", typeof(string));
@@ -129,7 +145,6 @@ namespace ShipAutoCadPlugin.UI
                     _bomDataTable.Columns.Add($"{container} Pos", typeof(string));
                 }
 
-                // ĐIỀN DỮ LIỆU LÊN LƯỚI
                 var groupedFittings = rawData.GroupBy(r => r.VaultName).OrderBy(g => g.Key);
 
                 foreach (var group in groupedFittings)
@@ -148,11 +163,9 @@ namespace ShipAutoCadPlugin.UI
                         {
                             newRow[$"{container} Qty"] = totalQty;
                             
-                            // Phủ Project Pos Num từ thư viện lên tất cả Detail tương ứng
                             string posNum = group.First().ProjectPosNum;
                             newRow[$"{container} Pos"] = !string.IsNullOrEmpty(posNum) ? posNum : ""; 
                             
-                            // Cập nhật record thô luôn để khi Export Excel có số Pos chuẩn
                             var recordsToUpdate = group.Where(r => r.PanelName == container);
                             foreach(var r in recordsToUpdate)
                             {
@@ -183,7 +196,6 @@ namespace ShipAutoCadPlugin.UI
             }
         }
 
-        // HÀM HELPER: VLOOKUP LẤY THÔNG TIN, LỌC RÁC & LẤY POS NUM
         private void EnrichDataFromCatalog(List<BomHarvestRecord> records, bool isInterfaceMode, string projectFile)
         {
             List<AutoCadService.CatalogItem> catalog = null;
@@ -284,9 +296,6 @@ namespace ShipAutoCadPlugin.UI
             TxtStatus.Text = $"Auto-Balloon assigned {assignedCount} positions successfully.";
         }
 
-        // ====================================================================
-        // Bơm ngược số Pos vào thẻ Attribute POS_NUM trên CAD
-        // ====================================================================
         private void BtnSyncPosToCad_Click(object sender, RoutedEventArgs e)
         {
             if (_lastScanResults == null || _lastScanResults.Count == 0)
@@ -309,7 +318,6 @@ namespace ShipAutoCadPlugin.UI
                     {
                         foreach (var record in _lastScanResults)
                         {
-                            // Bỏ qua nếu không có số Pos hoặc không có Block ID nào được lưu
                             if (string.IsNullOrEmpty(record.Position) || record.InstanceIds == null || record.InstanceIds.Count == 0) continue;
 
                             foreach (ObjectId objId in record.InstanceIds)
@@ -319,17 +327,15 @@ namespace ShipAutoCadPlugin.UI
                                 BlockReference blkRef = tr.GetObject(objId, OpenMode.ForRead) as BlockReference;
                                 if (blkRef == null || blkRef.AttributeCollection == null) continue;
 
-                                // Tìm thẻ Attribute có tên "POS_NUM"
                                 foreach (ObjectId attId in blkRef.AttributeCollection)
                                 {
                                     AttributeReference attRef = tr.GetObject(attId, OpenMode.ForRead) as AttributeReference;
                                     if (attRef != null && attRef.Tag.Equals("POS_NUM", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        // Mở quyền Ghi và nhét số Pos vào
                                         attRef.UpgradeOpen();
                                         attRef.TextString = record.Position;
                                         updatedBlocksCount++;
-                                        break; // Xong thẻ này thì thoát vòng lặp tìm Attribute
+                                        break; 
                                     }
                                 }
                             }

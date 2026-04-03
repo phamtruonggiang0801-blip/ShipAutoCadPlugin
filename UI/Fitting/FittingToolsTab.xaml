@@ -1,27 +1,94 @@
 <UserControl x:Class="ShipAutoCadPlugin.UI.FittingToolsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#FFF2F2F2"
              FontSize="11">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,10,0,0">
-        <StackPanel TextElement.FontWeight="Normal">
+    
+    <UserControl.Resources>
+        <Style x:Key="HelperTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FF666666"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="FontStyle" Value="Italic"/>
+        </Style>
+
+        <Style TargetType="GroupBox">
+            <Setter Property="BorderBrush" Value="#FFCCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#FF222222"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="5,0,5,10"/>
+            <Setter Property="Padding" Value="8,6,8,8"/>
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#FFE1E1E1"/>
+            <Setter Property="Foreground" Value="#FF111111"/>
+            <Setter Property="BorderBrush" Value="#FFADADAD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FFD0D0D0"/>
+                    <Setter Property="BorderBrush" Value="#FF999999"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FFBDBDBD"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#FF005E9E"/>
+            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#FF004C82"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF004C82"/>
+                    <Setter Property="BorderBrush" Value="#FF003A63"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FF003A63"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,5,0,0">
+        <StackPanel TextElement.FontWeight="Normal" Margin="4">
             
-            <GroupBox Header="FITTING EXTRACTION (STEP 1)" Margin="5,0,5,10">
-                <StackPanel Margin="0,4">
-                    <TextBlock Text="Extract Model Geometry and Properties from Inventor IDW files into JSON/DWG." TextWrapping="Wrap" Foreground="#FF555555" Margin="0,0,0,10"/>
+            <GroupBox Header="3D EXTRACTION (STEP 1)">
+                <StackPanel>
+                    <TextBlock Text="Extract Model Geometry and Properties from Inventor IDW files into JSON/DWG." Style="{StaticResource HelperTextStyle}"/>
                     <Button x:Name="BtnBatchImportInventor" Content="Import .idw files" Click="BtnBatchImportInventor_Click"/>
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Header="FITTING FACTORY (STEP 2)" Margin="5,0,5,10">
-                <StackPanel Margin="0,4">
-                    <TextBlock Text="Harvest the extracted JSON files, split views, map layers, and inject attributes." TextWrapping="Wrap" Foreground="#FF555555" Margin="0,0,0,10"/>
+            <GroupBox Header="BLOCK FITTING (STEP 2)">
+                <StackPanel>
+                    <TextBlock Text="Import the extracted JSON files, split views, map layers, and inject attributes." Style="{StaticResource HelperTextStyle}"/>
                     
-                    <Border Background="#FFF4F8FB" BorderBrush="#FFD2E3FC" BorderThickness="1" Padding="5" Margin="0,0,0,10" CornerRadius="3">
+                    <Border Background="#FFF8F8F8" BorderBrush="#FFDDDDDD" BorderThickness="1" Padding="6" Margin="0,0,0,8" CornerRadius="2">
                         <StackPanel>
-                            <TextBlock Text="Set Target BOM Type:" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="#FF333333"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                <RadioButton x:Name="RadioPanelFitting" Content="Panel (Structure)" IsChecked="True" Foreground="#FF0055A5" FontWeight="Bold" Margin="0,0,10,0"/>
-                                <RadioButton x:Name="RadioDetailFitting" Content="Detail (Hull Matrix)" Foreground="#FF0055A5" FontWeight="Bold"/>
+                            <TextBlock Text="Target BOM Type:" FontWeight="SemiBold" Margin="0,0,0,6" Foreground="#FF444444"/>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="RadioPanelFitting" Content="Panel (Structure)" IsChecked="True" Margin="0,0,15,0"/>
+                                <RadioButton x:Name="RadioDetailFitting" Content="Detail (Hull)"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -30,32 +97,33 @@
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Header="FITTING LIBRARY (STEP 3)" Margin="5,0,5,10" BorderBrush="#FF0055A5" BorderThickness="2">
-                <StackPanel Margin="0,4">
-                    <TextBlock Text="Search, view, and insert standard fittings from the Central Library." TextWrapping="Wrap" Foreground="#FF555555" Margin="0,0,0,10"/>
-                    <Button x:Name="BtnOpenLibrary" Content="🔍 OPEN FITTING LIBRARY" Height="30" FontWeight="Bold" Background="#FF0055A5" Foreground="White" Click="BtnOpenLibrary_Click"/>
+            <GroupBox Header="FITTING LIBRARY (STEP 3)">
+                <StackPanel>
+                    <TextBlock Text="Search, view, and insert standard fittings from the Central Library." Style="{StaticResource HelperTextStyle}"/>
+                    <Button x:Name="BtnOpenLibrary" Content="Open Fitting Library" Style="{StaticResource PrimaryButtonStyle}" Click="BtnOpenLibrary_Click"/>
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Header="BOM EXPORT (STEP 4)" Margin="5,0,5,10" BorderBrush="#FF28A745" BorderThickness="2">
-                <StackPanel Margin="0,4">
-                    <TextBlock Text="Scan drawings, count fittings, auto-assign balloons, and export BOM matrix to Excel." TextWrapping="Wrap" Foreground="#FF555555" Margin="0,0,0,10"/>
-                    <Button x:Name="BtnOpenBomPreview" Content="OPEN BOM EXPORT" Height="30" FontWeight="Bold" Background="#FF28A745" Foreground="White" Click="BtnOpenBomPreview_Click"/>
+            <GroupBox Header="BOM EXPORT (STEP 4)">
+                <StackPanel>
+                    <TextBlock Text="Scan drawings, count fittings, auto-assign balloons, and export BOM matrix to Excel." Style="{StaticResource HelperTextStyle}"/>
+                    <Button x:Name="BtnOpenBomPreview" Content="Open BOM Export" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,10" Click="BtnOpenBomPreview_Click"/>
                     
-                    <Button x:Name="BtnAddBalloon" Content="Place Smart Balloon" Height="28" FontWeight="SemiBold" Background="#FFFFF2C0" BorderBrush="#FFFFC107" Foreground="#FF333333" Margin="0,8,0,0" Click="BtnAddBalloon_Click" ToolTip="Click continuously to place balloons on fittings"/>
-                    <Button x:Name="BtnMassBalloon" Content="Mass Auto-Balloon" Height="28" FontWeight="SemiBold" Background="#FF17A2B8" BorderBrush="#FF138496" Foreground="White" Margin="0,8,0,0" Click="BtnMassBalloon_Click" ToolTip="Select a boundary to automatically balloon all fittings"/>
+                    <TextBlock Text="Ballooning Tools:" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="#FF444444"/>
+                    <Button x:Name="BtnAddBalloon" Content="Place Smart Balloon" Click="BtnAddBalloon_Click" ToolTip="Click continuously to place balloons on fittings"/>
+                    <Button x:Name="BtnMassBalloon" Content="Mass Auto-Balloon" Click="BtnMassBalloon_Click" ToolTip="Select a boundary to automatically balloon all fittings"/>
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Header="BLOCK UTILITIES" Margin="5,0,5,10">
-                <StackPanel Margin="0,4">
-                    <TextBlock Text="Modify existing blocks without breaking references. Sync, replace, add or extract nested entities on the fly." TextWrapping="Wrap" Foreground="#FF555555" Margin="0,0,0,10"/>
+            <GroupBox Header="BLOCK UTILITIES">
+                <StackPanel>
+                    <TextBlock Text="Modify existing blocks without breaking references. Sync, replace, add or extract nested entities on the fly." Style="{StaticResource HelperTextStyle}"/>
                     
-                    <Button x:Name="BtnRedefineBlocks" Content="Sync/Redefine Blocks" Margin="0,0,0,6" Click="BtnRedefineBlocks_Click"/>
-                    <Button x:Name="BtnSmartReplace" Content="Smart Replace (Spatial)" Margin="0,0,0,6" Click="BtnSmartReplace_Click"/>
-                    <Button x:Name="BtnChangeBasePoint" Content="Change Insertion Point" Margin="0,0,0,6" Click="BtnChangeBasePoint_Click"/>
-                    <Button x:Name="BtnAddToBlock" Content="Add Objects to Block" Margin="0,0,0,6" Click="BtnAddToBlock_Click"/>
-                    <Button x:Name="BtnExtractFromBlock" Content="Extract Objects from Block" Click="BtnExtractFromBlock_Click"/>
+                    <Button x:Name="BtnRedefineBlocks" Content="Sync / Redefine Blocks" Click="BtnRedefineBlocks_Click"/>
+                    <Button x:Name="BtnSmartReplace" Content="Smart Replace (Spatial)" Click="BtnSmartReplace_Click"/>
+                    <Button x:Name="BtnChangeBasePoint" Content="Change Insertion Point" Click="BtnChangeBasePoint_Click"/>
+                    <Button x:Name="BtnAddToBlock" Content="Add Objects to Block" Click="BtnAddToBlock_Click"/>
+                    <Button x:Name="BtnExtractFromBlock" Content="Extract Objects from Block" Click="BtnExtractFromBlock_Click" Margin="0"/>
                 </StackPanel>
             </GroupBox>
 

@@ -38,6 +38,15 @@ namespace ShipAutoCadPlugin.Services
             public List<ViewMetadata> Views { get; set; } 
         }
 
+        // ====================================================================
+        // [CẤU TRÚC MỚI]: Đại diện cho 1 loại phụ kiện đi kèm (Accessory)
+        // ====================================================================
+        public class AccessoryItem
+        {
+            public string PartId { get; set; }
+            public int Quantity { get; set; } // Số lượng phụ kiện CẦN THIẾT cho 1 Fitting chính
+        }
+
         /// <summary>
         /// Cấu trúc mục lục cho file MasterCatalog.json trong thư viện trung tâm.
         /// Giúp quản lý và tìm kiếm Fitting nhanh chóng.
@@ -58,15 +67,27 @@ namespace ShipAutoCadPlugin.Services
             public string Title { get; set; }
             
             // Thuộc tính phân loại (PANEL hoặc DETAIL) do Leader quyết định lúc Import
-            // Giúp phân nhánh Cây thư mục (Tree Categories) trên giao diện Library
             public string BomType { get; set; } 
             
             public string FilePath { get; set; } // Đường dẫn vật lý đến file .dwg
 
-            // ====================================================================
-            // [CẬP NHẬT MỚI]: Vị trí tĩnh được đánh sẵn từ Project Library
-            // ====================================================================
             public string ProjectPosNum { get; set; } 
+
+            // ====================================================================
+            // [TÍNH NĂNG MỚI]: GEOMETRIC PROPERTIES & VIRTUAL BOM
+            // ====================================================================
+            
+            // Định dạng đối tượng: "Block" (Mặc định), "Polyline", "Line", "Circle", "Accessory"
+            public string EntityType { get; set; } = "Block"; 
+            
+            public string TriggerLayer { get; set; } // Ví dụ: "Mechanical-AM_7"
+            public string TriggerColor { get; set; } // Ví dụ: "Red" hoặc Index màu
+            
+            // Đơn vị tính: "pcs" (cái), "m" (mét), "kg"
+            public string UoM { get; set; } = "pcs"; 
+
+            // Danh sách các phụ kiện (Bu-lông, đai ốc...) đi kèm với Fitting này
+            public List<AccessoryItem> Accessories { get; set; } = new List<AccessoryItem>();
         }
     }
 }

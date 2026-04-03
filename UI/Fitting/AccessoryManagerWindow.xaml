@@ -1,0 +1,88 @@
+<Window x:Class="ShipAutoCadPlugin.UI.AccessoryManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Manage Accessories" Height="480" Width="600"
+        WindowStartupLocation="CenterScreen" Topmost="True"
+        Background="#FFF0F0F0" FontFamily="Segoe UI" FontSize="12">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#FFE1E1E1"/>
+            <Setter Property="BorderBrush" Value="#FFADADAD"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Padding" Value="15,0"/>
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#FFE8E8E8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="BorderBrush" Value="#FFCCCCCC"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#FFE8E8E8" BorderBrush="#FFCCCCCC" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Parent Fitting:" FontWeight="Bold" Foreground="#FF555555" Margin="0,0,10,0"/>
+                <TextBlock x:Name="TxtParentName" Text="CAS-XXXXXX" FontWeight="SemiBold" Foreground="#FF000000"/>
+            </StackPanel>
+        </Border>
+
+        <GroupBox Grid.Row="1" Header="Accessory Selection" BorderBrush="#FFCCCCCC" Padding="10" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <ComboBox x:Name="CboAccessories" Grid.Column="0" Height="24" IsEditable="True" StaysOpenOnEdit="True" KeyUp="CboAccessories_KeyUp" DisplayMemberPath="DisplayLabel" SelectedValuePath="PartNumber" Margin="0,0,5,0" ToolTip="Type Part ID or Name to search..."/>
+                
+                <Button x:Name="BtnCreateNew" Grid.Column="1" Content="New..." Width="60" Click="BtnCreateNew_Click"/>
+                
+                <TextBlock Grid.Column="2" Text="Qty:" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <TextBox x:Name="TxtQty" Grid.Column="2" Height="24" Width="30" HorizontalAlignment="Right" Margin="0,0,5,0" Text="1" TextAlignment="Center" VerticalContentAlignment="Center"/>
+                
+                <Button x:Name="BtnAdd" Grid.Column="3" Content="Add" Width="70" Click="BtnAdd_Click"/>
+            </Grid>
+        </GroupBox>
+
+        <DataGrid x:Name="GridAccessories" Grid.Row="2" AutoGenerateColumns="False" CanUserAddRows="False" 
+                  BorderBrush="#FFCCCCCC" Background="White" RowHeight="24" HeadersVisibility="Column"
+                  AlternatingRowBackground="#FFF9F9F9" Margin="0,0,0,10">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Part ID" Binding="{Binding PartId}" Width="150" IsReadOnly="True" FontWeight="SemiBold"/>
+                <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}" Width="80">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"><Setter Property="TextAlignment" Value="Center"/></Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="BtnRemove" Grid.Column="0" Content="Remove Selected" Click="BtnRemove_Click"/>
+            
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="BtnSave" Content="OK" Width="80" Click="BtnSave_Click"/>
+                <Button x:Name="BtnCancel" Content="Cancel" Width="80" Click="BtnCancel_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

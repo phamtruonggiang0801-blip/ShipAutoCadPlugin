@@ -10,18 +10,12 @@ namespace ShipAutoCadPlugin.Services
 {
     public partial class AutoCadService
     {
-        // ====================================================================
-        // CLASS LƯU TRỮ TẠM THỜI (Bộ nhớ RAM của thuật toán 2 nhịp)
-        // ====================================================================
         private class DiscoveredFitting
         {
             public string PosNum { get; set; }
             public Point3d ArrowPoint { get; set; }
         }
 
-        // ====================================================================
-        // MODULE: MASS AUTO-BALLOONING (Đánh Balloon tự động hàng loạt)
-        // ====================================================================
         public void MassAutoBalloon()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -39,15 +33,12 @@ namespace ShipAutoCadPlugin.Services
 
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    double mleaderScale = 25.0; // Tỷ lệ chuẩn của Designer
+                    double mleaderScale = 25.0; 
                     List<ObjectId> selectedIds = new List<ObjectId>(psr.Value.GetObjectIds());
                     
                     List<DiscoveredFitting> foundFittings = new List<DiscoveredFitting>();
                     HashSet<string> balloonedPos = new HashSet<string>();
 
-                    // ==========================================================
-                    // NHỊP 1: QUÉT RADAR ĐỂ TÌM TỌA ĐỘ VÀ LƯU VÀO RAM
-                    // ==========================================================
                     foreach (ObjectId id in selectedIds)
                     {
                         BlockReference topBlk = tr.GetObject(id, OpenMode.ForRead) as BlockReference;
@@ -63,22 +54,17 @@ namespace ShipAutoCadPlugin.Services
                         return;
                     }
 
-                    // ==========================================================
-                    // NHỊP 2: TÍNH TOÁN BỘ KHUNG ÔM SÁT FITTING VÀ PHÂN BỔ
-                    // ==========================================================
                     double minX = double.MaxValue;
                     double maxX = double.MinValue;
 
-                    // Lọc ra mép Trái/Phải cùng của CHÍNH CÁC FITTING
                     foreach (var f in foundFittings)
                     {
                         if (f.ArrowPoint.X < minX) minX = f.ArrowPoint.X;
                         if (f.ArrowPoint.X > maxX) maxX = f.ArrowPoint.X;
                     }
 
-                    // Khoảng cách từ tính (Dynamic Margins) = Kích thước Scale x Đơn vị đệm
-                    double margin = 20.0 * mleaderScale;   // Khoảng lùi ra hai bên mép (Ví dụ: 500 units)
-                    double slotSpacing = 12.0 * mleaderScale; // Khoảng cách chống đè chiều dọc (Ví dụ: 300 units)
+                    double margin = 20.0 * mleaderScale;   
+                    double slotSpacing = 12.0 * mleaderScale; 
                     
                     double leftBoundary = minX - margin;
                     double rightBoundary = maxX + margin;
@@ -86,19 +72,16 @@ namespace ShipAutoCadPlugin.Services
                     List<Point3d> occupiedSlots = new List<Point3d>();
                     BlockTableRecord currentSpace = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
 
-                    // Xếp chỗ và Vẽ Balloon
                     foreach (var f in foundFittings)
                     {
                         double distLeft = Math.Abs(f.ArrowPoint.X - leftBoundary);
                         double distRight = Math.Abs(rightBoundary - f.ArrowPoint.X);
                         
-                        // Fitting nằm bên nào thì hút về biên bên đó
                         double targetX = (distLeft < distRight) ? leftBoundary : rightBoundary;
                         double targetY = f.ArrowPoint.Y;
 
                         Point3d candidate = new Point3d(targetX, targetY, 0);
 
-                        // Chống đè Balloon cũ (Trượt dần lên/xuống)
                         int attempt = 1;
                         while (IsSlotOccupied(candidate, occupiedSlots, slotSpacing))
                         {
@@ -108,20 +91,16 @@ namespace ShipAutoCadPlugin.Services
                             attempt++;
                         }
 
-                        // Chốt tọa độ và bắn MLeader
                         DrawMagneticMLeader(tr, currentSpace, db, f.ArrowPoint, candidate, f.PosNum, mleaderScale);
                         occupiedSlots.Add(candidate);
                     }
 
                     tr.Commit();
-                    ed.WriteMessage($"\nMass Ballooning complete! Placed {foundFittings.Count} smart balloons.");
+                    ed.WriteMessage($"\nMass Ballooning complete! Placed {foundFittings.Count} smart balloon clusters.");
                 }
             }
         }
 
-        // =========================================================
-        // HÀM ĐỆ QUY LẤY DỮ LIỆU FITTING (NHỊP 1)
-        // =========================================================
         private void DiscoverFittings(Transaction tr, BlockReference blk, Matrix3d currentTransform, 
                                       HashSet<string> balloonedPos, List<DiscoveredFitting> foundFittings)
         {
@@ -142,7 +121,6 @@ namespace ShipAutoCadPlugin.Services
                 }
             }
 
-            // Lưu lại Fitting nếu chưa bị đánh dấu
             if (foundPos && !string.IsNullOrWhiteSpace(posNum) && !balloonedPos.Contains(posNum))
             {
                 Point3d arrowPoint = Point3d.Origin.TransformBy(currentTransform);
@@ -150,7 +128,6 @@ namespace ShipAutoCadPlugin.Services
                 balloonedPos.Add(posNum);
             }
 
-            // Moi tiếp các Block con (Hỗ trợ cả Dynamic Block)
             ObjectId btrId = blk.IsDynamicBlock ? blk.DynamicBlockTableRecord : blk.BlockTableRecord;
             BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForRead) as BlockTableRecord;
             
@@ -165,9 +142,6 @@ namespace ShipAutoCadPlugin.Services
             }
         }
 
-        // =========================================================
-        // THUẬT TOÁN KIỂM TRA CHỒNG LẤN (SLOT OCCUPANCY)
-        // =========================================================
         private bool IsSlotOccupied(Point3d pt, List<Point3d> occupied, double minDistance)
         {
             foreach (var occ in occupied)
@@ -178,12 +152,17 @@ namespace ShipAutoCadPlugin.Services
         }
 
         // =========================================================
-        // LÕI VẼ M-LEADER CHUẨN DESIGNER (Đã truyền thêm tham số Scale)
+        // LÕI VẼ M-LEADER ĐƯỢC NÂNG CẤP HỖ TRỢ CHÙM BÓNG
         // =========================================================
         private void DrawMagneticMLeader(Transaction tr, BlockTableRecord btrSpace, Database db, 
-                                         Point3d arrowPt, Point3d balloonPt, string posNum, double scale)
+                                         Point3d arrowPt, Point3d balloonPt, string rawPosNum, double scale)
         {
             BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+            string[] posNumbers = rawPosNum.Split(new char[] { ',', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            if (posNumbers.Length == 0) return;
+
+            Vector3d doglegDir = (balloonPt.X > arrowPt.X) ? Vector3d.XAxis : -Vector3d.XAxis;
+            bool useCircleBlock = bt.Has("_TagCircle");
 
             using (MLeader mleader = new MLeader())
             {
@@ -200,11 +179,8 @@ namespace ShipAutoCadPlugin.Services
                 int leaderLineIndex = mleader.AddLeaderLine(leaderIndex);
                 mleader.AddFirstVertex(leaderLineIndex, arrowPt);
                 mleader.AddLastVertex(leaderLineIndex, balloonPt);
-
-                Vector3d doglegDir = (balloonPt.X > arrowPt.X) ? Vector3d.XAxis : -Vector3d.XAxis;
                 mleader.SetDogleg(leaderIndex, doglegDir);
 
-                bool useCircleBlock = bt.Has("_TagCircle");
                 if (useCircleBlock)
                 {
                     mleader.ContentType = ContentType.BlockContent;
@@ -217,7 +193,7 @@ namespace ShipAutoCadPlugin.Services
                     mleader.ContentType = ContentType.MTextContent;
                     MText mText = new MText();
                     mText.SetDatabaseDefaults();
-                    mText.Contents = posNum;
+                    mText.Contents = posNumbers[0];
                     mText.TextHeight = 2.5;
                     mleader.MText = mText;
                     mleader.EnableFrameText = true;
@@ -243,8 +219,43 @@ namespace ShipAutoCadPlugin.Services
                         AttributeDefinition attDef = (AttributeDefinition)tr.GetObject(attDefId, OpenMode.ForRead);
                         AttributeReference attRef = new AttributeReference();
                         attRef.SetAttributeFromBlock(attDef, Matrix3d.Identity);
-                        attRef.TextString = posNum;
+                        attRef.TextString = posNumbers[0];
                         mleader.SetBlockAttribute(attDefId, attRef);
+                    }
+                }
+            }
+
+            // VẼ CÁC QUẢ BÓNG NỐI TIẾP
+            if (useCircleBlock && posNumbers.Length > 1)
+            {
+                double circleSpacing = 14.0 * scale; 
+                for (int i = 1; i < posNumbers.Length; i++)
+                {
+                    Point3d nextPt = balloonPt + doglegDir * (circleSpacing * i);
+                    using (BlockReference stackedBlk = new BlockReference(nextPt, bt["_TagCircle"]))
+                    {
+                        stackedBlk.ScaleFactors = new Scale3d(scale);
+                        LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+                        if (lt.Has("Mechanical-AM_5")) stackedBlk.Layer = "Mechanical-AM_5";
+
+                        btrSpace.AppendEntity(stackedBlk);
+                        tr.AddNewlyCreatedDBObject(stackedBlk, true);
+
+                        BlockTableRecord btr = (BlockTableRecord)tr.GetObject(stackedBlk.BlockTableRecord, OpenMode.ForRead);
+                        foreach (ObjectId id in btr)
+                        {
+                            if (id.ObjectClass.IsDerivedFrom(RXObject.GetClass(typeof(AttributeDefinition))))
+                            {
+                                AttributeDefinition attDef = (AttributeDefinition)tr.GetObject(id, OpenMode.ForRead);
+                                using (AttributeReference attRef = new AttributeReference())
+                                {
+                                    attRef.SetAttributeFromBlock(attDef, stackedBlk.BlockTransform);
+                                    attRef.TextString = posNumbers[i];
+                                    stackedBlk.AttributeCollection.AppendAttribute(attRef);
+                                    tr.AddNewlyCreatedDBObject(attRef, true);
+                                }
+                            }
+                        }
                     }
                 }
             }

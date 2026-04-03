@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using ShipAutoCadPlugin.Models;
+using Autodesk.AutoCAD.DatabaseServices;
 
 namespace ShipAutoCadPlugin.Services
 {
@@ -74,13 +75,19 @@ namespace ShipAutoCadPlugin.Services
                             {
                                 aggregatedFittings.Add(new BomHarvestRecord
                                 {
-                                    PanelName = panel.Name, // Trả lại tên Panel gốc (VD: 6D-09P)
+                                    PanelName = panel.Name, 
                                     VaultName = fit.VaultName,
                                     PartId = fit.PartId,
                                     Description = fit.Description,
                                     XClass = fit.XClass,
-                                    Position = fit.Position, // Giữ nguyên Position đã được đánh số
-                                    // THUẬT TOÁN NHÂN TỔNG: Số lượng Fitting trong 1 Detail * Số lượng Detail đó trên Panel
+                                    Position = fit.Position, 
+                                    
+                                    // [BẢO TOÀN DỮ LIỆU MỚI]: Giữ lại toàn bộ thông tin chuẩn bị cho Export & Balloon
+                                    ProjectPosNum = fit.ProjectPosNum, 
+                                    UoM = fit.UoM,                     
+                                    ParentBlockName = fit.ParentBlockName, 
+                                    InstanceIds = fit.InstanceIds,     
+                                    
                                     Quantity = fit.Quantity * detail.Qty 
                                 });
                             }
@@ -88,18 +95,27 @@ namespace ShipAutoCadPlugin.Services
                     }
                 }
 
-                // 5. Gom nhóm (Merge) các Fitting trùng nhau (Phòng trường hợp Detail 1 và Detail 2 xài chung 1 loại CAS)
+                // 5. Gom nhóm (Merge) các Fitting trùng nhau
+                // [LƯU Ý QUAN TRỌNG]: Nhóm theo ParentBlockName và UoM để Accessory không bị gộp sai
                 var mergedFittings = aggregatedFittings
-                    .GroupBy(f => f.VaultName)
+                    .GroupBy(f => new { f.VaultName, f.ParentBlockName, f.UoM })
                     .Select(g => new BomHarvestRecord
                     {
                         PanelName = panel.Name,
-                        VaultName = g.Key,
+                        VaultName = g.Key.VaultName,
                         PartId = g.First().PartId,
                         Description = g.First().Description,
                         XClass = g.First().XClass,
                         Position = g.First().Position,
-                        Quantity = g.Sum(f => f.Quantity) // Cộng dồn số lượng
+                        
+                        // Kế thừa các thuộc tính của nhóm
+                        ProjectPosNum = g.First().ProjectPosNum,
+                        UoM = g.Key.UoM,
+                        ParentBlockName = g.Key.ParentBlockName,
+                        Quantity = g.Sum(f => f.Quantity), 
+                        
+                        // Gộp tất cả ObjectId lại thành một túi to để Ballooning dễ tìm
+                        InstanceIds = g.SelectMany(f => f.InstanceIds ?? new List<ObjectId>()).Distinct().ToList() 
                     }).OrderBy(f => f.Position).ToList();
 
                 // 6. Gán danh sách đã tổng hợp vào Panel để UI hiển thị

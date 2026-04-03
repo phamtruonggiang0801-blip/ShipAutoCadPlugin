@@ -1,7 +1,7 @@
 <Window x:Class="ShipAutoCadPlugin.UI.FittingLibraryWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MacGregor Fitting Library" Height="680" Width="1200"
+        Title="MacGregor Fitting Library" Height="680" Width="1300"
         WindowStartupLocation="CenterScreen" Topmost="True"
         Background="#FFF0F0F0" FontFamily="Segoe UI">
     
@@ -86,9 +86,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <TextBlock Text="Global Search:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
-            <TextBox Grid.Column="1" x:Name="TxtSearch" Style="{StaticResource SearchTextBoxStyle}"
-                     TextChanged="TxtSearch_TextChanged" 
-                     ToolTip="Multi-keyword search is supported. Type keywords separated by space."/>
+            <TextBox Grid.Column="1" x:Name="TxtSearch" Style="{StaticResource SearchTextBoxStyle}" TextChanged="TxtSearch_TextChanged" ToolTip="Multi-keyword search is supported. Type keywords separated by space."/>
         </Grid>
 
         <Grid Grid.Row="2">
@@ -119,7 +117,6 @@
                                 </StackPanel>
                             </HierarchicalDataTemplate>
                         </TreeView.ItemTemplate>
-                        
                         <TreeView.ItemContainerStyle>
                             <Style TargetType="TreeViewItem">
                                 <Setter Property="IsExpanded" Value="True"/>
@@ -137,9 +134,9 @@
                       Background="White" BorderBrush="#FFDEDEDE" RowHeight="26"
                       CellEditEnding="GridCatalog_CellEditEnding">
                 <DataGrid.Columns>
+                    <DataGridTextColumn Header="Type" Binding="{Binding EntityType}" Width="Auto" IsReadOnly="True" FontWeight="SemiBold" Foreground="#FF005E9E"/>
                     <DataGridTextColumn Header="View / File Name" Binding="{Binding BlockName}" Width="Auto" Foreground="#FF555555" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Part Complete ID" Binding="{Binding PartNumber}" Width="Auto" FontWeight="Bold" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Revision" Binding="{Binding Revision}" Width="Auto" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Name" Binding="{Binding Title}" Width="Auto" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock"><Setter Property="TextWrapping" Value="Wrap"/></Style>
@@ -151,7 +148,7 @@
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
                     
-                    <DataGridTextColumn x:Name="ColProjectPos" Header="Project Pos." Binding="{Binding ProjectPosNum, UpdateSourceTrigger=PropertyChanged}" Width="100">
+                    <DataGridTextColumn x:Name="ColProjectPos" Header="Project Pos." Binding="{Binding ProjectPosNum, UpdateSourceTrigger=PropertyChanged}" Width="90">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="Bold"/>
@@ -174,6 +171,11 @@
                         </DataGridTextColumn.CellStyle>
                     </DataGridTextColumn>
 
+                    <DataGridTextColumn Header="UoM" Binding="{Binding UoM}" Width="50" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock"><Setter Property="TextAlignment" Value="Center"/></Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
                     <DataGridTextColumn Header="Weight" Binding="{Binding Mass, StringFormat={}{0} kg}" Width="Auto" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Originator" Binding="{Binding Designer}" Width="Auto" IsReadOnly="True"/>
                 </DataGrid.Columns>
@@ -185,13 +187,25 @@
             </DataGrid>
         </Grid>
 
-        <StackPanel Grid.Row="3" Margin="0,10,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="BtnAutoAssignPos" Content="Auto-Assign Pos" Width="120" Margin="0,0,10,0" Click="BtnAutoAssignPos_Click"/>
-            <Button x:Name="BtnRemoveSelected" Content="Remove Selected" Width="120" Margin="0,0,10,0" Click="BtnRemoveSelected_Click" Foreground="#FFD32F2F" FontWeight="SemiBold"/>
-            <Button x:Name="BtnAddToProject" Content="Add to Project" Width="120" Margin="0,0,10,0" Click="BtnAddToProject_Click"/>
-            <Button x:Name="BtnUpdateLibrary" Content="Push Update" Width="110" Margin="0,0,10,0" Click="BtnUpdateLibrary_Click"/>
-            <Button x:Name="BtnRefresh" Content="Refresh" Width="80" Margin="0,0,10,0" Click="BtnRefresh_Click"/>
-            <Button x:Name="BtnInsert" Content="Insert to CAD" Width="120" Style="{StaticResource PrimaryButtonStyle}" Click="BtnInsert_Click"/>
-        </StackPanel>
+        <Grid Grid.Row="3" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <Button x:Name="BtnAddFromCad" Content="➕ Add from CAD" Width="130" Margin="0,0,10,0" Click="BtnAddFromCad_Click" Background="#FF28A745" Foreground="White" FontWeight="Bold" Height="28"/>
+                <Button x:Name="BtnManageAccessory" Content="🔗 Sub-BOM / Accessories" Width="180" Margin="0,0,10,0" Click="BtnManageAccessory_Click" FontWeight="SemiBold" Background="#FFE1E1E1" Height="28"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="BtnAutoAssignPos" Content="Auto-Assign Pos" Width="120" Margin="0,0,10,0" Click="BtnAutoAssignPos_Click"/>
+                <Button x:Name="BtnRemoveSelected" Content="Remove Selected" Width="120" Margin="0,0,10,0" Click="BtnRemoveSelected_Click" Foreground="#FFD32F2F" FontWeight="SemiBold"/>
+                <Button x:Name="BtnAddToProject" Content="Add to Project" Width="120" Margin="0,0,10,0" Click="BtnAddToProject_Click"/>
+                <Button x:Name="BtnUpdateLibrary" Content="Push Update" Width="100" Margin="0,0,10,0" Click="BtnUpdateLibrary_Click"/>
+                <Button x:Name="BtnRefresh" Content="Refresh" Width="70" Margin="0,0,10,0" Click="BtnRefresh_Click"/>
+                <Button x:Name="BtnInsert" Content="Insert to CAD" Width="120" Style="{StaticResource PrimaryButtonStyle}" Click="BtnInsert_Click"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

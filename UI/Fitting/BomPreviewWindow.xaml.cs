@@ -14,9 +14,6 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
-// ====================================================================
-// Đặt bí danh (Alias) để tránh đụng độ thư viện với AutoCAD API
-// ====================================================================
 using DataTable = System.Data.DataTable;
 using DataColumn = System.Data.DataColumn;
 using DataRow = System.Data.DataRow;
@@ -40,6 +37,7 @@ namespace ShipAutoCadPlugin.UI
         {
             _bomDataTable = new DataTable();
             _bomDataTable.Columns.Add("Vault Name", typeof(string));
+            _bomDataTable.Columns.Add("Type", typeof(string)); // [MỚI]: Phân biệt Mẹ/Con
             _bomDataTable.Columns.Add("Part ID", typeof(string));
             _bomDataTable.Columns.Add("XClass", typeof(string));
             _bomDataTable.Columns.Add("Description", typeof(string));
@@ -48,43 +46,32 @@ namespace ShipAutoCadPlugin.UI
 
         private void GridBomMatrix_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
         {
-            if (e.PropertyName == "Vault Name" || e.PropertyName == "Part ID" || e.PropertyName == "XClass" || e.PropertyName == "Description")
+            if (e.PropertyName == "Vault Name" || e.PropertyName == "Type" || e.PropertyName == "Part ID" || e.PropertyName == "XClass" || e.PropertyName == "Description")
             {
                 e.Column.IsReadOnly = true;
                 if (e.PropertyName == "Description") e.Column.Width = new DataGridLength(1, DataGridLengthUnitType.Star);
+                if (e.PropertyName == "Type") { e.Column.Header = "Hierarchy"; }
             }
             else if (e.PropertyName.EndsWith(" Qty"))
             {
                 e.Column.IsReadOnly = true; 
                 Style cellStyle = new Style(typeof(DataGridCell));
-                
-                // Màu nền Xanh nhạt
                 cellStyle.Setters.Add(new Setter(BackgroundProperty, new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(240, 248, 255))));
-                // [FIX LỖI TÀNG HÌNH]: Ép màu chữ đen tĩnh
                 cellStyle.Setters.Add(new Setter(ForegroundProperty, System.Windows.Media.Brushes.Black));
-
-                // [FIX LỖI TÀNG HÌNH]: Ép màu chữ đen khi được click (Selected)
                 Trigger selTrigger = new Trigger { Property = DataGridCell.IsSelectedProperty, Value = true };
                 selTrigger.Setters.Add(new Setter(ForegroundProperty, System.Windows.Media.Brushes.Black));
                 cellStyle.Triggers.Add(selTrigger);
-
                 e.Column.CellStyle = cellStyle;
             }
             else if (e.PropertyName.EndsWith(" Pos"))
             {
                 e.Column.IsReadOnly = false; 
                 Style cellStyle = new Style(typeof(DataGridCell));
-                
-                // Màu nền Vàng nhạt
                 cellStyle.Setters.Add(new Setter(BackgroundProperty, new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 250, 205))));
-                // [FIX LỖI TÀNG HÌNH]: Ép màu chữ đen tĩnh
                 cellStyle.Setters.Add(new Setter(ForegroundProperty, System.Windows.Media.Brushes.Black));
-
-                // [FIX LỖI TÀNG HÌNH]: Ép màu chữ đen khi được click (Selected)
                 Trigger selTrigger = new Trigger { Property = DataGridCell.IsSelectedProperty, Value = true };
                 selTrigger.Setters.Add(new Setter(ForegroundProperty, System.Windows.Media.Brushes.Black));
                 cellStyle.Triggers.Add(selTrigger);
-
                 e.Column.CellStyle = cellStyle;
             }
         }
@@ -104,14 +91,8 @@ namespace ShipAutoCadPlugin.UI
                     OpenFileDialog ofd = new OpenFileDialog();
                     ofd.Title = "Select Project Library JSON (to load Project Pos Num)";
                     ofd.Filter = "JSON Files (*.json)|*.json";
-                    if (ofd.ShowDialog() == true)
-                    {
-                        projectFile = ofd.FileName;
-                    }
-                    else
-                    {
-                        MessageBox.Show("No Project Library selected. Project Pos Num will be empty.", "Notice", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    if (ofd.ShowDialog() == true) projectFile = ofd.FileName;
+                    else MessageBox.Show("No Project Library selected. Project Pos Num will be empty.", "Notice", MessageBoxButton.OK, MessageBoxImage.Information);
                     
                     rawData = _acService.HarvestInterfaceBom();
                 }
@@ -134,6 +115,7 @@ namespace ShipAutoCadPlugin.UI
                 _bomDataTable.Clear();
                 _bomDataTable.Columns.Clear();
                 _bomDataTable.Columns.Add("Vault Name", typeof(string));
+                _bomDataTable.Columns.Add("Type", typeof(string));
                 _bomDataTable.Columns.Add("Part ID", typeof(string));
                 _bomDataTable.Columns.Add("XClass", typeof(string));
                 _bomDataTable.Columns.Add("Description", typeof(string));
@@ -145,12 +127,18 @@ namespace ShipAutoCadPlugin.UI
                     _bomDataTable.Columns.Add($"{container} Pos", typeof(string));
                 }
 
-                var groupedFittings = rawData.GroupBy(r => r.VaultName).OrderBy(g => g.Key);
+                // [BẢO TOÀN KIẾN TRÚC MẸ-CON]: Group theo Part ID và Trạng thái Phụ kiện
+                var groupedFittings = rawData
+                    .GroupBy(r => new { r.VaultName, r.ParentPartId, r.IsAccessory })
+                    .OrderBy(g => g.Key.IsAccessory ? g.Key.ParentPartId : g.Key.VaultName) // Ép Con đứng ngay dưới Mẹ
+                    .ThenBy(g => g.Key.IsAccessory)
+                    .ThenBy(g => g.Key.VaultName);
 
                 foreach (var group in groupedFittings)
                 {
                     DataRow newRow = _bomDataTable.NewRow();
-                    newRow["Vault Name"] = group.Key;
+                    newRow["Vault Name"] = group.Key.VaultName;
+                    newRow["Type"] = group.Key.IsAccessory ? $"  ↳ Acc. of {group.Key.ParentPartId}" : "Main Fitting"; // Ký hiệu trực quan
                     newRow["Part ID"] = group.First().PartId ?? "";
                     newRow["XClass"] = group.First().XClass ?? "N/A"; 
                     newRow["Description"] = group.First().Description ?? "Harvested from CAD";
@@ -184,7 +172,7 @@ namespace ShipAutoCadPlugin.UI
                 GridBomMatrix.ItemsSource = _bomDataTable.DefaultView;
                 
                 string modeName = isInterfaceMode ? "Detail(s)" : "Panel(s)";
-                TxtStatus.Text = $"Scan complete. Found {uniqueContainers.Count} {modeName} and {groupedFittings.Count()} unique Fitting(s).";
+                TxtStatus.Text = $"Scan complete. Found {uniqueContainers.Count} {modeName} and {groupedFittings.Count()} unique Item(s).";
             }
             catch (Exception ex)
             {
@@ -199,22 +187,13 @@ namespace ShipAutoCadPlugin.UI
         private void EnrichDataFromCatalog(List<BomHarvestRecord> records, bool isInterfaceMode, string projectFile)
         {
             List<AutoCadService.CatalogItem> catalog = null;
-            
             if (isInterfaceMode && !string.IsNullOrEmpty(projectFile) && File.Exists(projectFile))
             {
-                try 
-                {
-                    string json = File.ReadAllText(projectFile);
-                    catalog = JsonConvert.DeserializeObject<List<AutoCadService.CatalogItem>>(json);
-                } 
+                try { catalog = JsonConvert.DeserializeObject<List<AutoCadService.CatalogItem>>(File.ReadAllText(projectFile)); } 
                 catch { }
             }
             
-            if (catalog == null || catalog.Count == 0)
-            {
-                catalog = _acService.GetMasterCatalogItems(); 
-            }
-
+            if (catalog == null || catalog.Count == 0) catalog = _acService.GetMasterCatalogItems(); 
             if (catalog == null || catalog.Count == 0) return;
 
             for (int i = records.Count - 1; i >= 0; i--)
@@ -223,35 +202,27 @@ namespace ShipAutoCadPlugin.UI
                 string searchKey = record.VaultName?.ToUpper() ?? "";
                 if (string.IsNullOrEmpty(searchKey)) continue;
 
-                var matchedItem = catalog.FirstOrDefault(c => c.BlockName != null && c.BlockName.ToUpper().Contains(searchKey));
+                var matchedItem = catalog.FirstOrDefault(c => (c.BlockName != null && c.BlockName.ToUpper().Contains(searchKey)) || (c.PartNumber != null && c.PartNumber.ToUpper() == searchKey));
                 
                 if (matchedItem != null)
                 {
                     string bType = (matchedItem.BomType ?? "").ToUpper();
-                    
-                    if (isInterfaceMode && bType == "PANEL")
-                    {
-                        records.RemoveAt(i); 
-                        continue;
-                    }
-                    else if (!isInterfaceMode && (bType == "DETAIL" || bType == "HULL"))
-                    {
-                        records.RemoveAt(i); 
-                        continue;
-                    }
+                    if (isInterfaceMode && bType == "PANEL") { records.RemoveAt(i); continue; }
+                    else if (!isInterfaceMode && (bType == "DETAIL" || bType == "HULL")) { records.RemoveAt(i); continue; }
 
                     if (!string.IsNullOrEmpty(matchedItem.PartNumber)) record.PartId = matchedItem.PartNumber;
                     if (!string.IsNullOrEmpty(matchedItem.Description)) record.Description = matchedItem.Description;
                     if (!string.IsNullOrEmpty(matchedItem.Title)) record.XClass = matchedItem.Title;
                     
                     if (isInterfaceMode && !string.IsNullOrEmpty(matchedItem.ProjectPosNum))
-                    {
                         record.ProjectPosNum = matchedItem.ProjectPosNum;
-                    }
                 }
             }
         }
 
+        // ====================================================================
+        // [CẬP NHẬT TÍNH NĂNG MỚI]: Đánh số Balloon tuần tự (Sequential)
+        // ====================================================================
         private void BtnAutoBalloon_Click(object sender, RoutedEventArgs e)
         {
             if (RadioHull.IsChecked == true)
@@ -260,42 +231,53 @@ namespace ShipAutoCadPlugin.UI
                 return;
             }
 
-            if (_bomDataTable.Columns.Count <= 4) return;
+            if (_lastScanResults == null || _lastScanResults.Count == 0) return;
+
+            var uniqueContainers = _lastScanResults.Select(r => r.PanelName).Distinct().ToList();
             int assignedCount = 0;
 
-            foreach (DataColumn col in _bomDataTable.Columns)
+            foreach (var container in uniqueContainers)
             {
-                if (col.ColumnName.EndsWith(" Qty"))
-                {
-                    string containerName = col.ColumnName.Replace(" Qty", "");
-                    string posColName = $"{containerName} Pos";
-                    int posCounter = 2; 
+                int posCounter = 1; // Bắt đầu đánh số từ 001 cho mỗi Panel
 
+                // Lọc và Sắp xếp Mẹ trước, Con kế tiếp
+                var recordsInContainer = _lastScanResults
+                    .Where(r => r.PanelName == container)
+                    .OrderBy(r => r.IsAccessory ? r.ParentPartId : r.VaultName)
+                    .ThenBy(r => r.IsAccessory)
+                    .ThenBy(r => r.VaultName)
+                    .GroupBy(r => new { r.VaultName, r.ParentPartId, r.IsAccessory })
+                    .ToList();
+
+                foreach (var group in recordsInContainer)
+                {
+                    string finalPos = posCounter.ToString("D3");
+
+                    // Cập nhật thuộc tính ẩn
+                    foreach (var record in group) record.Position = finalPos;
+
+                    // Cập nhật giao diện DataGrid Matrix
                     foreach (DataRow row in _bomDataTable.Rows)
                     {
-                        if (row[col.ColumnName] != DBNull.Value && Convert.ToInt32(row[col.ColumnName]) > 0)
+                        if (row["Vault Name"].ToString() == group.Key.VaultName && 
+                            row["Type"].ToString().Contains("Acc.") == group.Key.IsAccessory)
                         {
-                            string finalPos = posCounter.ToString("D3");
-                            row[posColName] = finalPos; 
-                            
-                            string vaultName = row["Vault Name"].ToString();
-                            var recordsToUpdate = _lastScanResults.Where(r => r.PanelName == containerName && r.VaultName == vaultName).ToList();
-                            
-                            foreach(var record in recordsToUpdate)
-                            {
-                                record.Position = finalPos;
-                                record.Quantity = Convert.ToInt32(row[col.ColumnName]);
-                            }
-
-                            posCounter++;
-                            assignedCount++;
+                            row[$"{container} Pos"] = finalPos;
                         }
                     }
+
+                    posCounter++;
+                    assignedCount++;
                 }
             }
-            TxtStatus.Text = $"Auto-Balloon assigned {assignedCount} positions successfully.";
+            
+            GridBomMatrix.Items.Refresh();
+            TxtStatus.Text = $"Auto-Balloon assigned {assignedCount} sequential positions successfully.";
         }
 
+        // ====================================================================
+        // [CẬP NHẬT TÍNH NĂNG MỚI]: Trộn số Balloon để đẩy vào CAD (CAD Sync Merger)
+        // ====================================================================
         private void BtnSyncPosToCad_Click(object sender, RoutedEventArgs e)
         {
             if (_lastScanResults == null || _lastScanResults.Count == 0)
@@ -316,27 +298,42 @@ namespace ShipAutoCadPlugin.UI
                 {
                     using (Transaction tr = doc.TransactionManager.StartTransaction())
                     {
+                        // BƯỚC 1: Thu thập và gộp các số Pos xài chung 1 cục Block vật lý (ObjectId)
+                        Dictionary<ObjectId, HashSet<string>> blockPosMap = new Dictionary<ObjectId, HashSet<string>>();
+
                         foreach (var record in _lastScanResults)
                         {
-                            if (string.IsNullOrEmpty(record.Position) || record.InstanceIds == null || record.InstanceIds.Count == 0) continue;
+                            if (string.IsNullOrEmpty(record.Position) || record.InstanceIds == null) continue;
 
                             foreach (ObjectId objId in record.InstanceIds)
                             {
                                 if (objId.IsNull || objId.IsErased) continue;
 
-                                BlockReference blkRef = tr.GetObject(objId, OpenMode.ForRead) as BlockReference;
-                                if (blkRef == null || blkRef.AttributeCollection == null) continue;
+                                if (!blockPosMap.ContainsKey(objId))
+                                    blockPosMap[objId] = new HashSet<string>();
+                                
+                                blockPosMap[objId].Add(record.Position); // HashSet tự động loại bỏ trùng lặp
+                            }
+                        }
 
-                                foreach (ObjectId attId in blkRef.AttributeCollection)
+                        // BƯỚC 2: Mở từng Block ra và bơm chuỗi gộp (VD: "001,002,003") vào POS_NUM
+                        foreach (var kvp in blockPosMap)
+                        {
+                            BlockReference blkRef = tr.GetObject(kvp.Key, OpenMode.ForRead) as BlockReference;
+                            if (blkRef == null || blkRef.AttributeCollection == null) continue;
+
+                            // Trộn các số Pos lại và phân cách bằng dấu phẩy
+                            string combinedPos = string.Join(",", kvp.Value.OrderBy(x => x));
+
+                            foreach (ObjectId attId in blkRef.AttributeCollection)
+                            {
+                                AttributeReference attRef = tr.GetObject(attId, OpenMode.ForRead) as AttributeReference;
+                                if (attRef != null && attRef.Tag.Equals("POS_NUM", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    AttributeReference attRef = tr.GetObject(attId, OpenMode.ForRead) as AttributeReference;
-                                    if (attRef != null && attRef.Tag.Equals("POS_NUM", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        attRef.UpgradeOpen();
-                                        attRef.TextString = record.Position;
-                                        updatedBlocksCount++;
-                                        break; 
-                                    }
+                                    attRef.UpgradeOpen();
+                                    attRef.TextString = combinedPos;
+                                    updatedBlocksCount++;
+                                    break; 
                                 }
                             }
                         }
@@ -344,7 +341,7 @@ namespace ShipAutoCadPlugin.UI
                     }
                 }
 
-                MessageBox.Show($"Successfully synced {updatedBlocksCount} Position Number(s) to AutoCAD Blocks!", "Sync Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Successfully synced {updatedBlocksCount} Position Tags to AutoCAD Blocks!\n\nNote: Stacked items (Main + Accessories) are merged into a single attribute (e.g. '001,002,003').", "Sync Complete", MessageBoxButton.OK, MessageBoxImage.Information);
                 TxtStatus.Text = $"Synced {updatedBlocksCount} attributes to CAD.";
             }
             catch (Exception ex)
@@ -420,10 +417,13 @@ namespace ShipAutoCadPlugin.UI
                         }
                         wsMatrix.Columns().AdjustToContents();
 
+                        // ====================================================================
+                        // [CẬP NHẬT TÍNH NĂNG MỚI]: Xuất BOM Data đẹp, Mẹ kẹp lấy Con
+                        // ====================================================================
                         var wsData = workbook.Worksheets.Add(dataSheetName);
                         string containerHeader = isInterfaceMode ? "Detail Name" : "Panel Name";
                         
-                        var headers = new string[] { containerHeader, "Vault Name", "Part ID", "XClass", "Description", "Parent Block", "Quantity", "Position" };
+                        var headers = new string[] { containerHeader, "Vault Name", "Part ID", "XClass", "Description", "Hierarchy", "Parent Block", "Quantity", "UoM", "Position" };
                         
                         for (int i = 0; i < headers.Length; i++)
                         {
@@ -434,18 +434,35 @@ namespace ShipAutoCadPlugin.UI
                             cell.Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
                         }
 
-                        for (int r = 0; r < _lastScanResults.Count; r++)
+                        // Ép Sort Mẹ kẹp lấy Con trước khi xuất
+                        var sortedResults = _lastScanResults
+                            .OrderBy(r => r.PanelName)
+                            .ThenBy(r => r.IsAccessory ? r.ParentPartId : r.VaultName)
+                            .ThenBy(r => r.IsAccessory)
+                            .ThenBy(r => r.VaultName)
+                            .ToList();
+
+                        for (int r = 0; r < sortedResults.Count; r++)
                         {
-                            var item = _lastScanResults[r];
+                            var item = sortedResults[r];
                             wsData.Cell(r + 2, 1).Value = item.PanelName;
                             wsData.Cell(r + 2, 2).Value = item.VaultName;
                             wsData.Cell(r + 2, 3).Value = item.PartId;
                             wsData.Cell(r + 2, 4).Value = item.XClass;
                             wsData.Cell(r + 2, 5).Value = item.Description;
-                            wsData.Cell(r + 2, 6).Value = item.ParentBlockName;
-                            wsData.Cell(r + 2, 7).Value = item.Quantity;
-                            wsData.Cell(r + 2, 8).Value = item.Position;
+                            wsData.Cell(r + 2, 6).Value = item.IsAccessory ? "Accessory" : "Main Item"; // Thêm cột Hierarchy
+                            wsData.Cell(r + 2, 7).Value = item.ParentBlockName;
+                            wsData.Cell(r + 2, 8).Value = item.Quantity;
+                            wsData.Cell(r + 2, 9).Value = item.UoM;
+                            wsData.Cell(r + 2, 10).Value = item.Position;
                             
+                            // Tô màu xám nhạt cho dòng Phụ kiện để dễ nhìn
+                            if (item.IsAccessory)
+                            {
+                                wsData.Range(r + 2, 1, r + 2, headers.Length).Style.Fill.BackgroundColor = XLColor.WhiteSmoke;
+                                wsData.Cell(r + 2, 5).Style.Font.Italic = true; // Description in nghiêng
+                            }
+
                             for (int c = 1; c <= headers.Length; c++)
                             {
                                 wsData.Cell(r + 2, c).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);

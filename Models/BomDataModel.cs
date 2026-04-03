@@ -12,25 +12,35 @@ namespace ShipAutoCadPlugin.Models
         public string XClass { get; set; }
         public string Description { get; set; }
         public int Quantity { get; set; }
+        
+        // ====================================================================
+        // Đơn vị tính để xuất ra báo cáo (Mặc định là pcs)
+        // ====================================================================
+        public string UoM { get; set; } = "pcs";
+
         public string ParentBlockName { get; set; }
         
-        // [BỔ SUNG] Lưu lại vị trí Balloon sau khi Kỹ sư ấn Auto-Assign (Dành cho Panel BOM)
+        // ====================================================================
+        // [CẬP NHẬT MỚI]: Khóa liên kết Mẹ - Con để xuất Balloon Chùm (Stacked)
+        // ====================================================================
+        public bool IsAccessory { get; set; } = false;
+        public string ParentPartId { get; set; } = "";
+        
+        // Lưu lại vị trí Balloon sau khi Kỹ sư ấn Auto-Assign (Dành cho Panel BOM)
         public string Position { get; set; } 
 
-        // ====================================================================
-        // [CẬP NHẬT MỚI]: Vị trí tĩnh được đánh sẵn từ thư viện (Dành cho Detail/Hull BOM)
-        // ====================================================================
+        // Vị trí tĩnh được đánh sẵn từ thư viện (Dành cho Detail/Hull BOM)
         public string ProjectPosNum { get; set; } 
 
-        // ====================================================================
-        // [TÍNH NĂNG MỚI]: "Túi" chứa định danh vật lý của các Block trên mặt bằng CAD
-        // ====================================================================
+        // "Túi" chứa định danh vật lý của các Block trên mặt bằng CAD
         public List<ObjectId> InstanceIds { get; set; } = new List<ObjectId>();
     }
 
     // Class tiện ích để chứa các hằng số kích hoạt logic (Triggers)
     public static class BomTriggers
     {
+        // Ghi chú: Các hằng số Hardcode này sẽ dần được loại bỏ khi Module Virtual BOM 
+        // chính thức được thay thế bằng MasterCatalog ở các bản cập nhật tới.
         public const string WIRE_ROPE_PART_ID = "400288625";
         public const string THIMBLE_PART_ID = "400288975";
         public const string CLAMP_PART_ID = "400288785";

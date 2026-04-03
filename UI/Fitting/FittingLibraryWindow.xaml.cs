@@ -42,7 +42,7 @@ namespace ShipAutoCadPlugin.UI
             LoadCatalog(Path.Combine(_libraryPath, "MasterCatalog.json"));
             
             ColProjectPos.IsReadOnly = true; 
-            BtnAutoAssignPos.IsEnabled = false; // Mặc định tắt
+            BtnAutoAssignPos.IsEnabled = false; 
         }
 
         private void LoadCatalog(string catalogFilePath)
@@ -155,12 +155,108 @@ namespace ShipAutoCadPlugin.UI
                     (i.BlockName != null && i.BlockName.ToLower().Contains(kw)) ||
                     (i.Description != null && i.Description.ToLower().Contains(kw)) ||
                     (i.Title != null && i.Title.ToLower().Contains(kw)) ||
-                    (i.Designer != null && i.Designer.ToLower().Contains(kw))
+                    (i.Designer != null && i.Designer.ToLower().Contains(kw)) ||
+                    (i.EntityType != null && i.EntityType.ToLower().Contains(kw)) // Tìm thêm theo loại (Line, Block...)
                 )
             ).ToList();
 
             GridCatalog.ItemsSource = filtered;
         }
+
+        // ====================================================================
+        // [BƯỚC 5]: TÍCH HỢP TÍNH NĂNG VIRTUAL BOM VÀ GEOMETRIC
+        // ====================================================================
+
+        // ====================================================================
+        // [PHƯƠNG ÁN CUỐI CÙNG]: Dùng Application.Idle để thoát hoàn toàn WPF Thread
+        // ====================================================================
+        private void BtnAddFromCad_Click(object sender, RoutedEventArgs e)
+        {
+            if (RadioProjectMode.IsChecked == true)
+            {
+                MessageBox.Show("Please switch to 'Master Library' mode to add new fittings.", "Notice", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // 1. Ẩn cửa sổ WPF ngay lập tức
+            this.Hide();
+
+            // 2. Trả Focus về màn hình vẽ của AutoCAD
+            Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView();
+
+            // 3. Đặt lịch hẹn: "Khi nào AutoCAD rảnh rỗi (Idle), hãy chạy hàm OnAutoCadIdle"
+            Autodesk.AutoCAD.ApplicationServices.Application.Idle += OnAutoCadIdle;
+            
+            // Hàm Click kết thúc tại đây! WPF không còn giữ luồng nữa.
+        }
+
+        // 4. Hàm này sẽ được AutoCAD tự động gọi khi nó đã rảnh rỗi 100%
+        private void OnAutoCadIdle(object sender, EventArgs e)
+        {
+            // CỰC KỲ QUAN TRỌNG: Hủy đăng ký ngay lập tức để hàm này chỉ chạy 1 lần duy nhất
+            Autodesk.AutoCAD.ApplicationServices.Application.Idle -= OnAutoCadIdle;
+
+            try
+            {
+                // Lúc này, AutoCAD đang hoàn toàn nắm quyền, gọi hàm Pick sẽ cực kỳ mượt mà
+                var draftItem = _acService.PickGeometricFeatureFromCad();
+
+                if (draftItem != null)
+                {
+                    VirtualItemWindow virtualWin = new VirtualItemWindow(_acService, draftItem);
+                    virtualWin.Owner = this; 
+                    if (virtualWin.ShowDialog() == true)
+                    {
+                        LoadCatalog(System.IO.Path.Combine(_libraryPath, "MasterCatalog.json"));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error picking object: " + ex.Message, "System Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // Dù thành công hay văng lỗi, phải hiển thị lại cửa sổ Thư viện
+                this.Show();
+            }
+        }
+
+        private void BtnManageAccessory_Click(object sender, RoutedEventArgs e)
+        {
+            if (RadioProjectMode.IsChecked == true)
+            {
+                MessageBox.Show("Accessory management must be done in 'Master Library' mode.", "Notice", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var selectedItems = GridCatalog.SelectedItems.Cast<AutoCadService.CatalogItem>().ToList();
+            
+            if (selectedItems.Count != 1)
+            {
+                MessageBox.Show("Please select EXACTLY ONE Fitting from the Master Library to manage its accessories.", "Notice", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var selectedFitting = selectedItems[0];
+
+            try
+            {
+                AccessoryManagerWindow accWin = new AccessoryManagerWindow(_acService, selectedFitting);
+                if (accWin.ShowDialog() == true)
+                {
+                    LoadCatalog(Path.Combine(_libraryPath, "MasterCatalog.json"));
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error opening Accessory Manager: " + ex.Message, "System Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ====================================================================
+        // CÁC HÀM CŨ ĐƯỢC GIỮ NGUYÊN
+        // ====================================================================
 
         private void BtnInsert_Click(object sender, RoutedEventArgs e)
         {
@@ -183,6 +279,12 @@ namespace ShipAutoCadPlugin.UI
             {
                 foreach (var item in selectedItems)
                 {
+                    // Chặn không cho Insert các vật tư tuyến tính hoặc phụ kiện (Chỉ Block mới Insert được)
+                    if (item.EntityType != "Block")
+                    {
+                        MessageBox.Show($"Item '{item.PartNumber}' is a {item.EntityType} and cannot be inserted as a Block.", "Action Restricted", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        continue;
+                    }
                     _acService.InsertBlockFromLibrary(item.FilePath, item.BlockName);
                 }
             }
@@ -203,11 +305,9 @@ namespace ShipAutoCadPlugin.UI
         private void BtnUpdateLibrary_Click(object sender, RoutedEventArgs e)
         {
             Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView();
-            
             Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
             Database db = doc.Database;
-
             ObjectId selectedId = ObjectId.Null;
 
             PromptSelectionResult psr = ed.SelectImplied();
@@ -223,10 +323,7 @@ namespace ShipAutoCadPlugin.UI
                 peo.AddAllowedClass(typeof(BlockReference), true);
                 
                 PromptEntityResult res = ed.GetEntity(peo);
-                if (res.Status == PromptStatus.OK)
-                {
-                    selectedId = res.ObjectId;
-                }
+                if (res.Status == PromptStatus.OK) selectedId = res.ObjectId;
             }
 
             if (selectedId != ObjectId.Null)
@@ -238,10 +335,7 @@ namespace ShipAutoCadPlugin.UI
                         BlockReference blkRef = tr.GetObject(selectedId, OpenMode.ForRead) as BlockReference;
                         if (blkRef != null)
                         {
-                            string blockName = blkRef.IsDynamicBlock ? 
-                                ((BlockTableRecord)tr.GetObject(blkRef.DynamicBlockTableRecord, OpenMode.ForRead)).Name : 
-                                blkRef.Name;
-
+                            string blockName = blkRef.IsDynamicBlock ? ((BlockTableRecord)tr.GetObject(blkRef.DynamicBlockTableRecord, OpenMode.ForRead)).Name : blkRef.Name;
                             var catalogItem = _fullCatalog?.FirstOrDefault(x => x.BlockName.Equals(blockName, StringComparison.OrdinalIgnoreCase));
                             
                             if (catalogItem != null)
@@ -274,9 +368,6 @@ namespace ShipAutoCadPlugin.UI
             ed.SetImpliedSelection(new ObjectId[0]);
         }
         
-        // ====================================================================
-        // [CẬP NHẬT]: Điều phối trạng thái Enable/Disable các nút theo Mode
-        // ====================================================================
         private void RadioMode_Checked(object sender, RoutedEventArgs e)
         {
             if (!IsLoaded) return; 
@@ -285,14 +376,22 @@ namespace ShipAutoCadPlugin.UI
             {
                 if (BtnAddToProject != null) BtnAddToProject.IsEnabled = true; 
                 if (ColProjectPos != null) ColProjectPos.IsReadOnly = true; 
-                if (BtnAutoAssignPos != null) BtnAutoAssignPos.IsEnabled = false; // Tắt Auto-Assign ở Master
+                if (BtnAutoAssignPos != null) BtnAutoAssignPos.IsEnabled = false; 
                 
+                // Mở khóa các tính năng của Master
+                if (BtnAddFromCad != null) BtnAddFromCad.IsEnabled = true;
+                if (BtnManageAccessory != null) BtnManageAccessory.IsEnabled = true;
+
                 LoadCatalog(Path.Combine(_libraryPath, "MasterCatalog.json"));
             }
             else if (RadioProjectMode.IsChecked == true)
             {
                 if (BtnAddToProject != null) BtnAddToProject.IsEnabled = false; 
                 
+                // Khóa các tính năng sửa đổi Thư viện Master
+                if (BtnAddFromCad != null) BtnAddFromCad.IsEnabled = false;
+                if (BtnManageAccessory != null) BtnManageAccessory.IsEnabled = false;
+
                 if (string.IsNullOrEmpty(_currentProjectFile))
                 {
                     MessageBox.Show("Please Load or Create a Project Library first.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -301,7 +400,7 @@ namespace ShipAutoCadPlugin.UI
                 else
                 {
                     if (ColProjectPos != null) ColProjectPos.IsReadOnly = false; 
-                    if (BtnAutoAssignPos != null) BtnAutoAssignPos.IsEnabled = true; // Bật Auto-Assign ở Project
+                    if (BtnAutoAssignPos != null) BtnAutoAssignPos.IsEnabled = true; 
                     LoadCatalog(_currentProjectFile);
                 }
             }
@@ -317,7 +416,6 @@ namespace ShipAutoCadPlugin.UI
             {
                 _currentProjectFile = ofd.FileName;
                 TxtCurrentProject.Text = Path.GetFileNameWithoutExtension(_currentProjectFile);
-
                 RadioProjectMode.IsChecked = true; 
                 ColProjectPos.IsReadOnly = false; 
                 BtnAutoAssignPos.IsEnabled = true;
@@ -336,15 +434,12 @@ namespace ShipAutoCadPlugin.UI
             {
                 _currentProjectFile = sfd.FileName;
                 TxtCurrentProject.Text = Path.GetFileNameWithoutExtension(_currentProjectFile);
-                
                 File.WriteAllText(_currentProjectFile, "[]");
-
                 RadioProjectMode.IsChecked = true; 
                 ColProjectPos.IsReadOnly = false; 
                 BtnAutoAssignPos.IsEnabled = true;
                 LoadCatalog(_currentProjectFile);
-                
-                MessageBox.Show($"Project Library '{TxtCurrentProject.Text}' created successfully. You can now switch to Master Library and add fittings to this project.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Project Library '{TxtCurrentProject.Text}' created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -352,17 +447,12 @@ namespace ShipAutoCadPlugin.UI
         {
             if (string.IsNullOrEmpty(_currentProjectFile) || !File.Exists(_currentProjectFile))
             {
-                MessageBox.Show("Please load or create a Project Library using the 'Load Project' or 'Create Project' button first.", "Action Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Please load or create a Project Library first.", "Action Required", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             var selectedItems = GridCatalog.SelectedItems.Cast<AutoCadService.CatalogItem>().ToList();
-            
-            if (selectedItems.Count == 0)
-            {
-                MessageBox.Show("Please select at least one Fitting to add to the project.", "No Items Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (selectedItems.Count == 0) return;
 
             try
             {
@@ -388,7 +478,6 @@ namespace ShipAutoCadPlugin.UI
                     if (editedItem.ProjectPosNum == newValue) return;
 
                     editedItem.ProjectPosNum = newValue;
-
                     try
                     {
                         string newJson = JsonConvert.SerializeObject(_fullCatalog, Formatting.Indented);
@@ -402,17 +491,10 @@ namespace ShipAutoCadPlugin.UI
             }
         }
 
-        // ====================================================================
-        // [TÍNH NĂNG MỚI 1]: Xóa dữ liệu an toàn (Delete CRUD)
-        // ====================================================================
         private void BtnRemoveSelected_Click(object sender, RoutedEventArgs e)
         {
             var selectedItems = GridCatalog.SelectedItems.Cast<AutoCadService.CatalogItem>().ToList();
-            if (selectedItems.Count == 0)
-            {
-                MessageBox.Show("Please select at least one Fitting to remove.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (selectedItems.Count == 0) return;
 
             if (RadioProjectMode.IsChecked == true)
             {
@@ -420,19 +502,16 @@ namespace ShipAutoCadPlugin.UI
                 {
                     foreach (var item in selectedItems) _fullCatalog.Remove(item);
                     File.WriteAllText(_currentProjectFile, JsonConvert.SerializeObject(_fullCatalog, Formatting.Indented));
-                    
                     BuildCategoryTree();
                     ApplyFilters();
                 }
             }
             else
             {
-                // Cảnh báo đỏ khi xóa từ Master Library
                 if (MessageBox.Show($"WARNING: You are about to remove {selectedItems.Count} item(s) from the MASTER Library.\n\nThis will affect all future projects. Do you want to proceed?", "CRITICAL WARNING", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 {
                     foreach (var item in selectedItems) _fullCatalog.Remove(item);
                     File.WriteAllText(Path.Combine(_libraryPath, "MasterCatalog.json"), JsonConvert.SerializeObject(_fullCatalog, Formatting.Indented));
-                    
                     BuildCategoryTree();
                     ApplyFilters();
                     MessageBox.Show("Items removed from Master Library.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -440,26 +519,17 @@ namespace ShipAutoCadPlugin.UI
             }
         }
 
-        // ====================================================================
-        // [TÍNH NĂNG MỚI 2]: Auto-Assign Pos thông minh gom nhóm theo Part ID
-        // ====================================================================
         private void BtnAutoAssignPos_Click(object sender, RoutedEventArgs e)
         {
             if (RadioProjectMode.IsChecked != true || string.IsNullOrEmpty(_currentProjectFile)) return;
 
-            // 1. Chỉ lấy đồ của Detail / Hull để đánh số
             var detailFittings = _fullCatalog.Where(x => 
                 !string.IsNullOrWhiteSpace(x.BomType) && 
                 (x.BomType.ToUpper() == "DETAIL" || x.BomType.ToUpper() == "HULL")
             ).ToList();
 
-            if (detailFittings.Count == 0)
-            {
-                MessageBox.Show("No 'Detail' or 'Hull' fittings found in this project to assign positions.", "Notice", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
+            if (detailFittings.Count == 0) return;
 
-            // 2. Nhóm các Fitting cùng Part ID lại với nhau
             var groupedByPartId = detailFittings
                 .Where(x => !string.IsNullOrEmpty(x.PartNumber))
                 .GroupBy(x => x.PartNumber)
@@ -469,7 +539,6 @@ namespace ShipAutoCadPlugin.UI
             int posCounter = 1;
             int updatedCount = 0;
 
-            // 3. Rải số tuần tự
             foreach (var group in groupedByPartId)
             {
                 string posString = posCounter.ToString("D3");
@@ -481,7 +550,6 @@ namespace ShipAutoCadPlugin.UI
                 posCounter++;
             }
 
-            // 4. Tự động lưu lại
             try
             {
                 File.WriteAllText(_currentProjectFile, JsonConvert.SerializeObject(_fullCatalog, Formatting.Indented));

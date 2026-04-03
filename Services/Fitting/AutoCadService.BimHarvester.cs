@@ -13,7 +13,6 @@ namespace ShipAutoCadPlugin.Services
 {
     public partial class AutoCadService
     {
-        // [CẬP NHẬT MỚI]: Thêm tham số targetBomType do Leader quyết định từ UI
         public void BatchImportBimFittings(string[] jsonPaths, string targetBomType)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -36,7 +35,6 @@ namespace ShipAutoCadPlugin.Services
                             continue;
                         }
 
-                        // Truyền quyết định của Leader xuống hàm xử lý
                         var stats = HarvestViewsByBoundingBox(dwgPath, jsonPath, targetBomType);
                         
                         totalViewsHarvested += stats.Item1;
@@ -50,7 +48,7 @@ namespace ShipAutoCadPlugin.Services
                         
                         string msg = $"Batch Import Completed!\n\n" +
                                      $"• Total Files Processed: {jsonPaths.Length}\n" +
-                                     $"• Fittings Classified as: [{targetBomType.ToUpper()}]\n" + // Báo cáo loại BOM
+                                     $"• Fittings Classified as: [{targetBomType.ToUpper()}]\n" + 
                                      $"• Total Views Extracted: {totalViewsHarvested}\n" +
                                      $"• New Fittings Added: {totalNewFittings}\n" +
                                      $"• Revisions Updated: {totalUpdatedFittings}\n\n" +
@@ -66,7 +64,6 @@ namespace ShipAutoCadPlugin.Services
             }
         }
 
-        // [CẬP NHẬT MỚI]: Thêm tham số targetBomType
         private Tuple<int, int, int> HarvestViewsByBoundingBox(string dwgPath, string jsonPath, string targetBomType)
         {
             Database destDb = HostApplicationServices.WorkingDatabase;
@@ -90,6 +87,11 @@ namespace ShipAutoCadPlugin.Services
                 using (Transaction destTr = destDb.TransactionManager.StartTransaction())
                 using (Transaction srcTr = sourceDb.TransactionManager.StartTransaction())
                 {
+                    UnlockLayer(destDb, destTr, "0");
+                    UnlockLayer(destDb, destTr, "Mechanical-AM_3");
+                    UnlockLayer(destDb, destTr, "Mechanical-AM_7");
+                    UnlockLayer(destDb, destTr, "Mechanical-AM_9");
+
                     CheckAndCreateLayer(destDb, destTr, "Mechanical-AM_3", 6); 
                     CheckAndCreateLayer(destDb, destTr, "Mechanical-AM_7", 4); 
                     CheckAndCreateLayer(destDb, destTr, "Mechanical-AM_9", 7); 
@@ -111,9 +113,6 @@ namespace ShipAutoCadPlugin.Services
                         {
                             Entity ent = srcTr.GetObject(entId, OpenMode.ForRead) as Entity;
                             
-                            // ========================================================
-                            // STRICT WHITELIST (Điểm danh đích danh)
-                            // ========================================================
                             if (ent == null) continue;
 
                             bool isAllowed = ent is Line || 
@@ -125,10 +124,7 @@ namespace ShipAutoCadPlugin.Services
                                              ent is Spline || 
                                              ent is Ellipse;
 
-                            if (!isAllowed) 
-                            {
-                                continue;
-                            }
+                            if (!isAllowed) continue;
 
                             try
                             {
@@ -155,7 +151,6 @@ namespace ShipAutoCadPlugin.Services
 
                         CreateViewLabel(newBtr, destTr, uniqueName.ToUpper(), -(view.Height / 2.0) - 20.0);
                         
-                        // [CẬP NHẬT MỚI]: Truyền targetBomType vào hàm tạo Attribute
                         InjectBimAttributes(newBtr, destTr, metadata, targetBomType);
 
                         string exportPath = Path.Combine(@"C:\Temp_BIM_Library", uniqueName + ".dwg");
@@ -169,7 +164,7 @@ namespace ShipAutoCadPlugin.Services
                             Revision = metadata.Revision, 
                             Designer = metadata.Designer, 
                             Title = metadata.Title,
-                            BomType = targetBomType, // <--- Ghi nhận phân loại vào Database MasterCatalog
+                            BomType = targetBomType, 
                             FilePath = exportPath
                         }));
 
@@ -205,20 +200,23 @@ namespace ShipAutoCadPlugin.Services
                 if (ent == null) continue;
                 ent.TransformBy(Matrix3d.Displacement(moveVec));
                 
+                // 1. Phân loại đối tượng vào đúng Layer
                 string ly = ent.Layer.ToUpper();
-                if (ly.Contains("VISIBLE")) { ent.Layer = "0"; ent.Color = Color.FromColorIndex(ColorMethod.ByBlock, 0); }
+                if (ly.Contains("VISIBLE")) ent.Layer = "0";
                 else if (ly.Contains("HIDDEN")) ent.Layer = "Mechanical-AM_3";
                 else if (ly.Contains("CENTER")) ent.Layer = "Mechanical-AM_7";
 
                 // ========================================================
-                // [FIX ISSUE 3]: Ép Linetype và LineWeight về ByLayer chuẩn
+                // [FIX LỖI 1 & 2]: Ép ColorIndex = 256 (ByLayer) và Linetype 
+                // áp dụng triệt để cho TẤT CẢ các đường nét bên trong Block
                 // ========================================================
                 try 
                 {
+                    ent.ColorIndex = 256; // Mã màu chuẩn của ByLayer trong AutoCAD API
                     ent.Linetype = "ByLayer";
                     ent.LineWeight = LineWeight.ByLayer;
                 } 
-                catch { /* Bỏ qua nếu Entity không hỗ trợ đổi Linetype */ }
+                catch { /* Bỏ qua an toàn nếu đối tượng (vd: Text) không cho phép đổi */ }
             }
         }
 
@@ -237,7 +235,6 @@ namespace ShipAutoCadPlugin.Services
             tr.AddNewlyCreatedDBObject(label, true);
         }
 
-        // [CẬP NHẬT MỚI]: Thêm tham số bomType và lệnh tạo Attribute tàng hình
         private void InjectBimAttributes(BlockTableRecord btr, Transaction tr, FittingMetadata meta, string bomType)
         {
             AddAttributeDef(btr, tr, "PART_NUMBER", meta.PartNumber, "PN", true);
@@ -248,9 +245,20 @@ namespace ShipAutoCadPlugin.Services
             
             AddAttributeDef(btr, tr, "DESIGNER", meta.Designer, "DESIGNER", true);
             AddAttributeDef(btr, tr, "TITLE", meta.Title, "TITLE", true);
-            
-            // Đóng dấu phân loại BOM_TYPE thẳng vào Block một cách tàng hình (Invisible = true)
             AddAttributeDef(btr, tr, "BOM_TYPE", bomType.ToUpper(), "BOM_TYPE", true);
+        }
+
+        private void UnlockLayer(Database db, Transaction tr, string layerName)
+        {
+            LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+            if (lt.Has(layerName))
+            {
+                LayerTableRecord ltr = (LayerTableRecord)tr.GetObject(lt[layerName], OpenMode.ForWrite);
+                if (ltr.IsLocked)
+                {
+                    ltr.IsLocked = false; 
+                }
+            }
         }
     }
 }

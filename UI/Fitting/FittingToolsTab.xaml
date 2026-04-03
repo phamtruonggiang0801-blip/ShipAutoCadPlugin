@@ -43,6 +43,7 @@
                     <Button x:Name="BtnOpenBomPreview" Content="OPEN BOM EXPORT" Height="30" FontWeight="Bold" Background="#FF28A745" Foreground="White" Click="BtnOpenBomPreview_Click"/>
                     
                     <Button x:Name="BtnAddBalloon" Content="Place Smart Balloon" Height="28" FontWeight="SemiBold" Background="#FFFFF2C0" BorderBrush="#FFFFC107" Foreground="#FF333333" Margin="0,8,0,0" Click="BtnAddBalloon_Click" ToolTip="Click continuously to place balloons on fittings"/>
+                    <Button x:Name="BtnMassBalloon" Content="Mass Auto-Balloon" Height="28" FontWeight="SemiBold" Background="#FF17A2B8" BorderBrush="#FF138496" Foreground="White" Margin="0,8,0,0" Click="BtnMassBalloon_Click" ToolTip="Select a boundary to automatically balloon all fittings"/>
                 </StackPanel>
             </GroupBox>
 

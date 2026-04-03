@@ -100,7 +100,7 @@ namespace ShipAutoCadPlugin.UI
         }
 
         // ====================================================================
-        // [SỰ KIỆN MỚI]: Kích hoạt lệnh ADD_BALLOON liên tục qua UI Button
+        // [LỘ TRÌNH 1]: Kích hoạt lệnh ADD_BALLOON liên tục qua UI Button
         // ====================================================================
         private void BtnAddBalloon_Click(object sender, RoutedEventArgs e)
         {
@@ -112,6 +112,22 @@ namespace ShipAutoCadPlugin.UI
                 
                 // Sử dụng SendStringToExecute để "gõ phím ảo" chữ "ADD_BALLOON "
                 doc.SendStringToExecute("ADD_BALLOON ", true, false, false);
+            }
+        }
+
+        // ====================================================================
+        // [LỘ TRÌNH 3]: Kích hoạt lệnh Mass Auto-Balloon đánh hàng loạt
+        // ====================================================================
+        private void BtnMassBalloon_Click(object sender, RoutedEventArgs e)
+        {
+            Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView();
+            try
+            {
+                _acService.MassAutoBalloon();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error during Mass Ballooning: " + ex.Message, "System Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -119,6 +119,8 @@
                 <StackPanel>
                     <TextBlock Text="Modify existing blocks without breaking references. Sync, replace, add or extract nested entities on the fly." Style="{StaticResource HelperTextStyle}"/>
                     
+                    <Button x:Name="BtnRenameCloneBlock" Content="Rename / Clone Block" Click="BtnRenameCloneBlock_Click" FontWeight="SemiBold"/>
+                    
                     <Button x:Name="BtnRedefineBlocks" Content="Sync / Redefine Blocks" Click="BtnRedefineBlocks_Click"/>
                     <Button x:Name="BtnSmartReplace" Content="Smart Replace (Spatial)" Click="BtnSmartReplace_Click"/>
                     <Button x:Name="BtnChangeBasePoint" Content="Change Insertion Point" Click="BtnChangeBasePoint_Click"/>

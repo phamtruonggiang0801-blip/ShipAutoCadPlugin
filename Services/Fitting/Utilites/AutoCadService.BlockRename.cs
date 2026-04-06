@@ -4,7 +4,6 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using ShipAutoCadPlugin.UI;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace ShipAutoCadPlugin.Services
@@ -18,7 +17,7 @@ namespace ShipAutoCadPlugin.Services
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            // 1. CHỌN BLOCK TRÊN CAD
+            // 1. BƯỚC 1: CHỌN BLOCK TRÊN CAD
             PromptEntityOptions peo = new PromptEntityOptions("\nSelect a Block to Rename or Clone: ");
             peo.SetRejectMessage("\nPlease select a Block Reference only.");
             peo.AddAllowedClass(typeof(BlockReference), true);
@@ -34,51 +33,61 @@ namespace ShipAutoCadPlugin.Services
                 BlockReference blkRef = tr.GetObject(blockRefId, OpenMode.ForRead) as BlockReference;
                 if (blkRef == null) return;
 
-                // Lấy tên thật (Hỗ trợ nhỡ có dính block động)
+                // Lấy tên thật (Hỗ trợ block động)
                 originalName = blkRef.IsDynamicBlock ? 
                     ((BlockTableRecord)tr.GetObject(blkRef.DynamicBlockTableRecord, OpenMode.ForRead)).Name : 
                     blkRef.Name;
 
-                // 2. HIỂN THỊ GIAO DIỆN
-                RenameBlockWindow ui = new RenameBlockWindow(originalName);
-                bool? result = Application.ShowModalWindow(ui);
+                // 2. BƯỚC 2: HỎI TÊN MỚI QUA COMMAND LINE (Giống lệnh CAD chuẩn)
+                PromptStringOptions pso = new PromptStringOptions($"\nEnter new block name <{originalName}_New>: ");
+                pso.AllowSpaces = true;
+                pso.DefaultValue = $"{originalName}_New"; // Đề xuất tên _New
+                pso.UseDefaultValue = true;               // Chỉ cần Kỹ sư ấn Enter/Space là nhận tên mặc định
 
-                if (result != true)
+                PromptResult prName = ed.GetString(pso);
+                if (prName.Status != PromptStatus.OK) return;
+
+                string newName = prName.StringResult.Trim();
+                if (string.IsNullOrEmpty(newName) || newName.Equals(originalName, StringComparison.OrdinalIgnoreCase))
                 {
-                    tr.Commit();
-                    return; 
-                }
-
-                string newName = ui.NewBlockName;
-                bool isClone = ui.IsCreateNewMode;
-
-                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
-                
-                if (bt.Has(newName))
-                {
-                    Application.ShowAlertDialog($"A block named '{newName}' already exists in this drawing!");
+                    ed.WriteMessage("\nInvalid or duplicate name. Operation cancelled.");
                     return;
                 }
 
-                // 3. THỰC THI LOGIC
+                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                if (bt.Has(newName))
+                {
+                    ed.WriteMessage($"\nError: A block named '{newName}' already exists!");
+                    return;
+                }
+
+                // 3. BƯỚC 3: HỎI TẠO MỚI (CLONE) HAY ĐỔI TÊN GỐC (RENAME)
+                PromptKeywordOptions pko = new PromptKeywordOptions("\nChoose action [Clone/Rename] <Clone>: ");
+                pko.Keywords.Add("Clone");
+                pko.Keywords.Add("Rename");
+                pko.Keywords.Default = "Clone"; // Ấn Enter là auto chọn Clone
+                pko.AllowNone = true;
+
+                PromptResult prAction = ed.GetKeywords(pko);
+                if (prAction.Status != PromptStatus.OK) return;
+
+                bool isClone = (prAction.StringResult == "Clone");
+
+                // 4. BƯỚC 4: THỰC THI (Cập nhật layer, nhét MText...)
                 try
                 {
                     if (isClone)
                     {
-                        // ----------------------------------------------------
-                        // HÀNH ĐỘNG 1: CLONE (TẠO MỚI & THAY THẾ)
-                        // ----------------------------------------------------
+                        // --- CLONE LOGIC ---
                         bt.UpgradeOpen();
                         BlockTableRecord oldBtr = (BlockTableRecord)tr.GetObject(blkRef.BlockTableRecord, OpenMode.ForRead);
 
-                        // Tạo ruột Block mới
                         BlockTableRecord newBtr = new BlockTableRecord();
                         newBtr.Name = newName;
                         newBtr.Origin = oldBtr.Origin;
                         bt.Add(newBtr);
                         tr.AddNewlyCreatedDBObject(newBtr, true);
 
-                        // Copy toàn bộ nét vẽ từ Block cũ sang Block mới (Bỏ qua Attribute)
                         ObjectIdCollection ids = new ObjectIdCollection();
                         foreach (ObjectId id in oldBtr) { ids.Add(id); }
                         
@@ -88,10 +97,9 @@ namespace ShipAutoCadPlugin.Services
                             db.DeepCloneObjects(ids, newBtr.ObjectId, mapping, false);
                         }
 
-                        // Cập nhật/Thêm MText
+                        // Bí thuật MText
                         UpdateOrAddInternalMText(tr, db, newBtr, newName);
 
-                        // Đặt Block Reference mới ra bản vẽ thay thế vị trí cũ
                         BlockTableRecord currentSpace = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
                         BlockReference newBlkRef = new BlockReference(blkRef.Position, newBtr.ObjectId)
                         {
@@ -104,21 +112,18 @@ namespace ShipAutoCadPlugin.Services
                         currentSpace.AppendEntity(newBlkRef);
                         tr.AddNewlyCreatedDBObject(newBlkRef, true);
 
-                        // Xóa Block Reference cũ
                         blkRef.UpgradeOpen();
-                        blkRef.Erase();
+                        blkRef.Erase(); // Xóa bản cũ đi
 
                         ed.WriteMessage($"\nSuccess: Cloned and replaced as '{newName}'.");
                     }
                     else
                     {
-                        // ----------------------------------------------------
-                        // HÀNH ĐỘNG 2: RENAME (ĐỔI TÊN ĐỊNH NGHĨA GỐC)
-                        // ----------------------------------------------------
+                        // --- RENAME LOGIC ---
                         BlockTableRecord btr = (BlockTableRecord)tr.GetObject(blkRef.BlockTableRecord, OpenMode.ForWrite);
                         btr.Name = newName;
 
-                        // Cập nhật/Thêm MText
+                        // Bí thuật MText
                         UpdateOrAddInternalMText(tr, db, btr, newName);
 
                         ed.WriteMessage($"\nSuccess: Definition renamed to '{newName}'. All instances updated.");
@@ -128,7 +133,7 @@ namespace ShipAutoCadPlugin.Services
                 }
                 catch (System.Exception ex)
                 {
-                    Application.ShowAlertDialog("Error processing block: " + ex.Message);
+                    ed.WriteMessage($"\nError processing block: {ex.Message}");
                     tr.Abort();
                 }
             }
@@ -141,7 +146,6 @@ namespace ShipAutoCadPlugin.Services
         {
             bool textFound = false;
 
-            // 1. Quét tìm chữ cứng (DBText / MText) bên trong Block
             foreach (ObjectId entId in btr)
             {
                 Entity ent = tr.GetObject(entId, OpenMode.ForRead) as Entity;
@@ -158,13 +162,10 @@ namespace ShipAutoCadPlugin.Services
                     mText.Contents = newBlockName;
                     textFound = true;
                 }
-                // Bỏ qua AttributeDefinition theo yêu cầu
             }
 
-            // 2. Nếu không có chữ cứng nào, đẻ ra 1 MText mới
             if (!textFound)
             {
-                // Kiểm tra và tạo Layer "Mechanical-AM_9" nếu chưa có
                 LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
                 string reqLayer = "Mechanical-AM_9";
 
@@ -174,13 +175,12 @@ namespace ShipAutoCadPlugin.Services
                     LayerTableRecord newLtr = new LayerTableRecord
                     {
                         Name = reqLayer,
-                        Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByAci, 7) // Màu trắng/đen chuẩn
+                        Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByAci, 7) 
                     };
                     lt.Add(newLtr);
                     tr.AddNewlyCreatedDBObject(newLtr, true);
                 }
 
-                // Cài đặt thông số chuẩn công ty (Tọa độ: 0, -15, 0 | Cao chữ: 10)
                 MText newMText = new MText();
                 newMText.SetDatabaseDefaults();
                 newMText.Location = new Point3d(0, -15, 0); 

@@ -56,10 +56,7 @@ namespace ShipAutoCadPlugin.UI
                 Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView();
                 try
                 {
-                    // Đọc sự lựa chọn của Leader trên giao diện WPF
                     string targetBomType = RadioPanelFitting.IsChecked == true ? "PANEL" : "DETAIL";
-
-                    // Truyền tham số targetBomType vào lõi Harvester
                     _acService.BatchImportBimFittings(selectedFiles, targetBomType);
                 }
                 catch (Exception ex)
@@ -82,14 +79,10 @@ namespace ShipAutoCadPlugin.UI
             }
         }
 
-        // =========================================================
-        // SỰ KIỆN MỞ CỬA SỔ BOM PREVIEW
-        // =========================================================
         private void BtnOpenBomPreview_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Khởi tạo và hiển thị Cửa sổ BOM Preview (Modeless)
                 BomPreviewWindow bomWindow = new BomPreviewWindow(_acService);
                 Autodesk.AutoCAD.ApplicationServices.Application.ShowModelessWindow(bomWindow);
             }
@@ -99,25 +92,16 @@ namespace ShipAutoCadPlugin.UI
             }
         }
 
-        // ====================================================================
-        // [LỘ TRÌNH 1]: Kích hoạt lệnh ADD_BALLOON liên tục qua UI Button
-        // ====================================================================
         private void BtnAddBalloon_Click(object sender, RoutedEventArgs e)
         {
             var doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
             if (doc != null)
             {
-                // Trả focus về màn hình CAD để Kỹ sư có thể click được luôn
                 Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView();
-                
-                // Sử dụng SendStringToExecute để "gõ phím ảo" chữ "ADD_BALLOON "
                 doc.SendStringToExecute("ADD_BALLOON ", true, false, false);
             }
         }
 
-        // ====================================================================
-        // [LỘ TRÌNH 3]: Kích hoạt lệnh Mass Auto-Balloon đánh hàng loạt
-        // ====================================================================
         private void BtnMassBalloon_Click(object sender, RoutedEventArgs e)
         {
             Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView();
@@ -134,6 +118,20 @@ namespace ShipAutoCadPlugin.UI
         // =========================================================
         // BLOCK UTILITIES EVENTS
         // =========================================================
+
+        // [MỚI]: Kích hoạt lệnh Rename / Clone Block
+        private void BtnRenameCloneBlock_Click(object sender, RoutedEventArgs e)
+        {
+            Autodesk.AutoCAD.Internal.Utils.SetFocusToDwgView();
+            try
+            {
+                _acService.InteractiveBlockRenameClone();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
         private void BtnRedefineBlocks_Click(object sender, RoutedEventArgs e)
         {

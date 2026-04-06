@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacGregor Fitting Tools - Hướng dẫn sử dụng Toàn tập</title>
+    <style>
+        :root {
+            --primary-color: #005E9E;
+            --secondary-color: #004C82;
+            --bg-color: #F8F9FA;
+            --text-color: #333333;
+            --border-color: #DDDDDD;
+            --note-bg: #E7F3FE;
+            --note-border: #90C4F5;
+            --warning-bg: #FFF9C4;
+            --warning-border: #FBC02D;
+            --success-bg: #E8F5E9;
+            --success-border: #4CAF50;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            text-align: center;
+        }
+        h2 {
+            color: var(--secondary-color);
+            margin-top: 35px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+        .badge {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        h3 {
+            color: #444;
+            margin-top: 25px;
+        }
+        p, li {
+            font-size: 15px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        kbd {
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        .callout {
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            border-radius: 0 4px 4px 0;
+        }
+        .callout.info {
+            background-color: var(--note-bg);
+            border-color: var(--primary-color);
+        }
+        .callout.warning {
+            background-color: var(--warning-bg);
+            border-color: var(--warning-border);
+        }
+        .callout.success {
+            background-color: var(--success-bg);
+            border-color: var(--success-border);
+        }
+        .img-placeholder {
+            background-color: #f0f0f0;
+            border: 2px dashed #bbb;
+            color: #888;
+            text-align: center;
+            padding: 40px 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+            font-style: italic;
+        }
+        .quick-step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .quick-step-num {
+            background: var(--primary-color);
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .faq-item {
+            margin-bottom: 20px;
+        }
+        .faq-q {
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 5px;
+        }
+        .faq-a {
+            margin-left: 20px;
+            border-left: 2px solid #eee;
+            padding-left: 15px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🛠️ MACGREGOR FITTING TOOLS<br><span style="font-size: 20px; color: #666;">HƯỚNG DẪN SỬ DỤNG TOÀN TẬP</span></h1>
+    
+    <div class="callout warning">
+        <strong>⚠️ QUY TẮC "SINGLE SOURCE OF TRUTH":</strong><br>
+        Đối với thông số hình học và số lượng, <strong>Bản vẽ CAD là Chân lý</strong>. Tuyệt đối KHÔNG chỉnh sửa số lượng hay số Pos thủ công trên Excel. Nếu có thay đổi, hãy thao tác trên CAD (chèn thêm block, quét lại BOM, Sync Pos) và xuất lại bảng Excel.
+    </div>
+
+    <h2><span class="badge">0</span> CÀI ĐẶT & MÔI TRƯỜNG</h2>
+    <ul>
+        <li><strong>Load Plugin:</strong> Gõ lệnh <kbd>NETLOAD</kbd> trong AutoCAD, tìm đến file <code>ShipAutoCadPlugin.dll</code>. Nếu công ty đã cài tự động, tab <strong>Fitting Tools</strong> sẽ hiển thị trên thanh Ribbon.</li>
+        <li><strong>Autodesk Inventor:</strong> Để sử dụng tính năng trích xuất 3D (STEP 1), máy tính của bạn <strong>bắt buộc phải cài đặt sẵn Autodesk Inventor</strong>.</li>
+        <li><strong>Thư viện dùng chung (Master Library):</strong> Các block được hệ thống sinh ra và lưu mặc định tại thư mục <code>C:\Temp_BIM_Library</code>. Nếu làm việc nhóm, thư mục này cần được map vào ổ đĩa mạng LAN dùng chung của công ty.</li>
+    </ul>
+
+    <h2><span class="badge">⚡</span> QUICK START (Luồng chạy nhanh 3 phút)</h2>
+    <p>Nếu bạn đang vội, hãy làm theo đúng 5 bước cơ bản sau để ra được thành phẩm:</p>
+    <div class="quick-step">
+        <div class="quick-step-num">1</div>
+        <div><strong>Trích xuất:</strong> Tại Tab Fitting Tools, bấm <kbd>Import .idw files</kbd> để biến bản vẽ 3D thành file JSON.</div>
+    </div>
+    <div class="quick-step">
+        <div class="quick-step-num">2</div>
+        <div><strong>Tạo Block:</strong> Chọn loại <em>BOM Type</em>, bấm <kbd>Import .json files</kbd>. Tool sẽ tự đúc các file JSON này thành Block AutoCAD tàng hình Attribute và cất vào Thư viện.</div>
+    </div>
+    <div class="quick-step">
+        <div class="quick-step-num">3</div>
+        <div><strong>Thiết kế CAD:</strong> Bấm <kbd>Open Fitting Library</kbd>, tìm Fitting, bấm <kbd>Insert to CAD</kbd> để rải chúng ra bản vẽ.</div>
+    </div>
+    <div class="quick-step">
+        <div class="quick-step-num">4</div>
+        <div><strong>Đồng bộ Số Pos:</strong> Mở <kbd>Open BOM Export</kbd> > bấm <kbd>Scan & Count</kbd> > bấm <kbd>Auto-Assign Positions</kbd> > bấm <kbd>Sync Pos to CAD</kbd>.</div>
+    </div>
+    <div class="quick-step">
+        <div class="quick-step-num">5</div>
+        <div><strong>Hoàn thiện:</strong> Ra ngoài màn hình CAD, quét chuột dùng <kbd>Mass Auto-Balloon</kbd> để cắm bóng hàng loạt, sau đó quay lại cửa sổ BOM bấm <kbd>Export to Excel</kbd>. Xong!</div>
+    </div>
+
+    <h2><span class="badge">STEP 1</span> 3D EXTRACTION (Trích xuất dữ liệu Inventor)</h2>
+    <ul>
+        <li><strong>Tính năng:</strong> Tự động trích xuất các hình học và siêu dữ liệu (iProperties) từ các file bản vẽ Inventor <code>.idw</code> / <code>.dwg</code> để làm dữ liệu đầu vào cho AutoCAD.</li>
+        <li><strong>Thao tác:</strong> Bấm <kbd>Import .idw files</kbd> -> Chọn file -> Đợi hệ thống chạy ngầm.</li>
+    </ul>
+    <div class="callout info">
+        <strong>Under the hood (Cơ chế ngầm):</strong>
+        Hệ thống tự đọc iProperties (Part Number, Description...), ưu tiên lấy trường <code>Designer</code> thay cho <code>Author</code>, tự động làm tròn khối lượng (Mass), và tính toán chính xác tọa độ các hình chiếu (Views).
+    </div>
+
+    <h2><span class="badge">STEP 2</span> BLOCK FITTING (Khởi tạo Thư viện Fitting)</h2>
+    
+    <div class="callout warning">
+        <strong>Giải nghĩa Thuật ngữ (Terminology):</strong> Trước khi Import JSON, bạn BẮT BUỘC phải phân loại Fitting này sẽ thuộc bảng BOM nào:
+        <ul>
+            <li><kbd>Panel (Structure)</kbd>: Chọn mục này nếu cụm bạn đang nạp là một cụm kết cấu lớn, hàn dính nguyên khối (thường chứa nhiều Detail bên trong).</li>
+            <li><kbd>Detail (Hull)</kbd>: Chọn mục này nếu cụm bạn đang nạp là một chi tiết rời, chi tiết vỏ, hoặc vật tư mua ngoài (Accessory) dùng để gắn lên Panel. Việc phân loại sai sẽ làm hỏng cấu trúc cây BOM.</li>
+        </ul>
+    </div>
+
+    <div class="img-placeholder">[Chụp ảnh màn hình mục Target BOM Type và nút Import JSON tại đây]</div>
+    <ul>
+        <li><strong>Thao tác:</strong> Chọn BOM Type -> Bấm <kbd>Import .json files</kbd>.</li>
+    </ul>
+    <div class="callout info">
+        <strong>Under the hood (Cơ chế ngầm):</strong>
+        Tự động mở khóa các Layer tiêu chuẩn (<code>Mechanical-AM_3</code>, <code>_7</code>, <code>_9</code>), cắt riêng từng hình chiếu dựa vào Bounding Box, ép Linetype và Color về <code>ByLayer</code>, và cấy thẳng Attribute <code>POS_NUM</code> tàng hình vào Block.
+    </div>
+
+    <h2><span class="badge">STEP 3</span> FITTING LIBRARY (Quản lý Thư viện)</h2>
+    
+    <ul>
+        <li><strong>Master Library vs Project Library:</strong> Master chứa toàn bộ Fitting chuẩn của công ty (Chỉ được thêm/sửa, không được đánh Pos). Project Library dành riêng cho dự án, cho phép đánh số Pos.</li>
+        <li><strong>Global Search:</strong> Tìm kiếm đa từ khóa cực mạnh (VD gõ: <code>sheave 22</code>).</li>
+    </ul>
+
+    <div class="callout success">
+        <strong>Tính năng Đặc biệt: Gom Hình Chiếu & Sub-BOM:</strong>
+        <ul>
+            <li><strong>Add from CAD:</strong> Quét nhiều hình chiếu (-tv, -fv, -sv) trên bản vẽ cùng lúc, tool sẽ tự động gom chúng chung vào 1 Part ID. Điều này giúp 3 hình chiếu vật lý tham chiếu chung về 1 dữ liệu BOM duy nhất.</li>
+            <li><strong>Sub-BOM / Accessories:</strong> Chọn 1 Fitting chính, bạn có thể gán thêm cho nó các "Phụ kiện ảo" (Ví dụ: Thêm 2 cái cùm, 4 con ốc). Khi xuất BOM, phụ kiện sẽ tự động bám theo Fitting chính.</li>
+        </ul>
+    </div>
+
+    <ul>
+        <li><strong>Insert to CAD:</strong> Chèn Block từ Thư viện ra màn hình. Khi chèn, hệ thống tự động kiểm tra và cấy thêm thẻ Attribute <code>POS_NUM</code> (tàng hình) vào Block nếu nó chưa có.</li>
+        <li><strong>Push Update:</strong> Sửa hình dáng Block trực tiếp trên bản vẽ, chọn nó và bấm nút này để ghi đè (Overwrite) file DWG trong Thư viện gốc.</li>
+    </ul>
+
+    <h2><span class="badge">STEP 4</span> BOM EXPORT & BALLOONING (Bóc tách & Ghi chú)</h2>
+    <div class="img-placeholder">[Chụp ảnh màn hình cửa sổ BOM Export Matrix tại đây]</div>
+    
+    <p>Thuật toán <strong>X-Ray</strong> sẽ quét xuyên thấu bản vẽ để đếm vật tư. Hệ thống có cơ chế <strong>Chống Đếm Khống</strong>: Nó sẽ tự động bỏ qua các Block có tên kết thúc bằng đuôi <code>-fv</code>, <code>-sv</code> hoặc <code>-iso</code>. Do đó, bạn chỉ được tính tiền trên 1 cụm dù vẽ 3 hình chiếu.</p>
+
+    <ul>
+        <li><kbd>Auto-Assign Positions</kbd>: Tự động cấp số Pos liên tiếp (001, 002...). Số Phụ kiện sẽ tự động bám theo số Mẹ.</li>
+        <li><kbd>Sync Pos to CAD</kbd>: Bơm mã số ngược lại vào bản vẽ. Cụm Mẹ có 2 Phụ kiện sẽ được gộp thành chuỗi <code>"001,002,003"</code>.</li>
+        <li><kbd>Place / Mass Balloon</kbd>: Tự động đọc chuỗi gộp và bung ra thành <strong>Chùm bóng (Stacked Balloons)</strong> liên tiếp. (Lưu ý: Chỉ cắm Balloon vào hình chiếu chính <code>-tv</code>).</li>
+        <li><kbd>Export Excel</kbd>: Xuất 2 Sheet (Matrix và Data). Phụ kiện tự động thụt lề và in nghiêng. Số Position được ép định dạng Text (<code>@</code>) để giữ số 0 đứng đầu.</li>
+    </ul>
+
+    <h2><span class="badge">UTILITIES</span> CÔNG CỤ SỬA BLOCK NHANH (Không cần Explode)</h2>
+    <div class="img-placeholder">[Chụp ảnh khu vực Block Utilities trên thanh Ribbon tại đây]</div>
+    <p>Đây là bộ công cụ quyền năng giúp bạn thao tác với Block hiện có cực nhanh mà không làm vỡ các Attribute tàng hình.</p>
+
+    <ul>
+        <li><strong>Rename / Clone Block:</strong> Bấm lệnh, chọn Block. Tool sẽ hỏi bạn muốn <em>Clone (Tạo mới & Thay thế)</em> hay <em>Rename (Đổi tên gốc)</em>. Hệ thống tự động sửa nội dung MText bên trong Block thành tên mới. Nếu Block chưa có MText, nó sẽ tự động tạo Layer <code>Mechanical-AM_9</code> và chèn 1 MText chuẩn ở tọa độ (0, -15, 0).</li>
+        
+        <li><strong>Add Objects to Block:</strong> Chọn Block đích, sau đó quét các nét vẽ rời rạc bên ngoài. Tool sử dụng ma trận nghịch đảo (Inverse Matrix) để hút các nét vẽ đó chui vào bên trong Block mà <em>không làm chúng bị dịch chuyển vị trí trên màn hình</em>. Các nét gốc bên ngoài sẽ tự động bị xóa.</li>
+        
+        <li><strong>Extract Objects from Block:</strong> Bấm lệnh và click liên tục vào các nét vẽ nằm sâu bên trong Block. Hệ thống sẽ bóc tách, nhân bản chúng (dựa trên ma trận nghịch đảo), kéo chúng ra ngoài Model Space và xóa đối tượng gốc ở bên trong. Ấn Enter hoặc Esc để thoát lệnh.</li>
+        
+        <li><strong>Change Insertion Point:</strong> Thay đổi điểm gốc (Base Point) của Block. Hệ thống sử dụng thuật toán ma trận WCS/OCS để dời các nét vẽ bên trong. Đặc biệt, nó tự động bù trừ tọa độ cho <em>TẤT CẢ các Block Reference cùng tên</em> trên bản vẽ để chúng không bị nhảy hình lung tung.</li>
+        
+        <li><strong>Smart Replace (Spatial):</strong> Quét chọn các Block Nguồn (Cũ) và Block Đích (Mới). Hệ thống sẽ dùng <em>Tâm Bounding Box</em> để sắp xếp không gian (từ trên xuống dưới, từ trái qua phải) và tạo quy tắc thay thế (Mapping Rules). Ấn Enter để thay thế toàn bản vẽ (Global), hoặc quét vùng chọn để thay thế cục bộ (Recursive).</li>
+
+        <li><strong>Redefine Blocks:</strong> Đồng bộ định nghĩa Block từ một bản vẽ đang mở khác (Source Drawing). Sử dụng cơ chế khóa kép (Double DocumentLock) và WblockCloneObjects ngầm để nạp dữ liệu an toàn, chống lỗi Fatal Error.</li>
+    </ul>
+
+    <h2><span class="badge">?</span> FAQ & KHẮC PHỤC SỰ CỐ (Troubleshooting)</h2>
+    
+    <div class="faq-item">
+        <div class="faq-q">Q: Tôi bấm 'Import .idw files' nhưng không thấy gì xảy ra hoặc báo lỗi?</div>
+        <div class="faq-a">A: Hệ thống cần giao tiếp với Autodesk Inventor. Hãy đảm bảo máy tính của bạn đã cài đặt phần mềm này. Mẹo nhỏ: Hãy bật sẵn phần mềm Inventor (để trống) trước khi bấm lệnh, quá trình import sẽ diễn ra mượt mà và ít bị "timeout" hơn.</div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-q">Q: Tại sao tôi quét BOM (Scan & Count) nhưng thấy số lượng bị thiếu so với thực tế tôi vẽ?</div>
+        <div class="faq-a">A: Hệ thống được thiết kế để chỉ đếm hình chiếu Bằng (Top View) nhằm chống đếm khống. Hãy kiểm tra lại, có thể bạn chỉ mới chèn hình chiếu Đứng (<code>-fv</code>) hoặc Cạnh (<code>-sv</code>) mà quên chèn hình chiếu chính <code>-tv</code>.</div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-q">Q: Khi tôi dùng lệnh cắm Balloon, tool báo lỗi "Không tìm thấy POS_NUM" (hoặc cắm ra bóng trống)?</div>
+        <div class="faq-a">A: Lỗi này xảy ra do bạn chưa đồng bộ dữ liệu. Sau khi Scan và Auto-Assign trên bảng BOM, bạn <strong>bắt buộc phải bấm nút "Sync Pos to CAD"</strong> để bơm các con số này vào các Attribute đang tàng hình, sau đó mới được cắm bóng. Nhớ chỉ cắm bóng vào Block <code>-tv</code>.</div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-q">Q: Khi thêm vật tư từ CAD (Add from CAD) vào thư viện, nó báo lỗi trùng tên?</div>
+        <div class="faq-a">A: Hãy đảm bảo ô "Part ID" bạn gõ là duy nhất và không chứa các ký tự cấm của AutoCAD (như <code>\ / : * ? " < > |</code>). Cân nhắc dùng lệnh Rename/Clone block trước khi thêm vào thư viện.</div>
+    </div>
+
+</div>
+
+</body>
+</html>

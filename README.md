@@ -1,40 +1,42 @@
-# 🛠️ MACGREGOR FITTING TOOLS - HƯỚNG DẪN SỬ DỤNG
+# 🛠️ MACGREGOR FITTING TOOLS - USER GUIDE
 
-Chào mừng bạn đến với tài liệu hướng dẫn sử dụng **Fitting Tools**. Đây là bộ công cụ toàn diện được thiết kế để tự động hóa quy trình bóc tách bản vẽ Inventor, quản lý thư viện Fitting tập trung, xuất bảng thống kê vật tư (BOM) và đánh Balloon thông minh trên AutoCAD.
+Welcome to the **Fitting Tools** documentation. This comprehensive toolkit is designed to automate Inventor drawing extraction, centrally manage fitting libraries, export Bill of Materials (BOM), and place smart balloons in AutoCAD.
 
-> **⚠️ Quy tắc "Single Source of Truth":** > Đối với thông số hình học và số lượng, **Bản vẽ CAD là Chân lý**. Không chỉnh sửa số lượng hay số Pos thủ công trên Excel. Nếu có thay đổi, hãy thao tác trên CAD (Scan lại, Sync Pos) và xuất lại bảng BOM.
+> **⚠️ The "Single Source of Truth" Rule:** > For geometry and quantities, **the CAD Drawing is the ultimate truth**. Do not manually edit quantities or Position Numbers in Excel. If changes are needed, update the CAD drawing (Re-scan, Sync Pos) and re-export the BOM.
 
-Giao diện bộ công cụ được chia thành 4 bước chính ứng với luồng công việc tiêu chuẩn:
+The toolkit interface is divided into 5 main sections corresponding to the standard workflow:
 
 ---
 
 ## 1. FITTING EXTRACTION (STEP 1)
-Bước đầu tiên để đưa dữ liệu hình học từ mô hình 3D (Inventor) vào hệ thống CAD 2D.
-* **Nút [Import .idw files]:** Cho phép chọn hàng loạt file bản vẽ Inventor (`.idw` hoặc `.dwg`). Tool sẽ tự động trích xuất hình học và các thuộc tính (Metadata) ra các file JSON và DWG trung gian.
+The first step to migrate geometric data from 3D models (Inventor) into the 2D CAD system.
+* **[Import .idw files] Button:** Allows batch selection of Inventor drawings (`.idw` or `.dwg`). The tool automatically extracts geometries and metadata into intermediary JSON and DWG files.
 
 ## 2. FITTING FACTORY (STEP 2)
-Xử lý dữ liệu thô vừa trích xuất và biến chúng thành các Block thông minh của AutoCAD.
-* **Set Target BOM Type:** Chọn loại phân bổ BOM mục tiêu trước khi nạp. Bạn có thể chọn **Panel (Structure)** hoặc **Detail (Hull Matrix)**.
-* **Nút [Import .json files]:** Đọc các file JSON, tự động map layer (Nét thấy, Nét đứt, Tâm), căn chỉnh gốc tọa độ, và đặc biệt là cấy các thẻ Attribute tàng hình (như `BOM_TYPE`, `PART_NUMBER`, `MASS`...) vào thẳng Block.
+Processes the extracted raw data and transforms it into intelligent AutoCAD Blocks.
+* **Set Target BOM Type:** Define the target BOM category before importing: **Panel (Structure)** or **Detail (Hull Matrix)**.
+* **[Import .json files] Button:** Reads JSON files, automatically maps layers (Visible, Hidden, Center), aligns insertion points, and injects invisible Attributes (like `BOM_TYPE`, `PART_NUMBER`, `MASS`...) directly into the blocks.
 
 ## 3. FITTING LIBRARY (STEP 3)
-Khu vực tra cứu và quản lý thư viện tập trung.
-* **Master Library (Kho Tổng):** Chứa toàn bộ Fitting chuẩn của công ty. Ở chế độ này, bạn không thể chỉnh sửa số Position (Project Pos).
-* **Project Library (Kho Dự án):** Chứa Fitting dùng riêng cho một dự án cụ thể. Cho phép dùng tính năng **Auto-Assign Pos** để rải số thứ tự tự động (001, 002...) gom nhóm theo `Part ID`.
-* **Nút [Insert to CAD]:** Chèn Fitting từ thư viện vào bản vẽ hiện tại. Hệ thống sẽ tự động cấy thêm thẻ Attribute tàng hình `POS_NUM` vào Block nếu nó chưa có.
-* **Nút [Push Update]:** Cho phép bạn sửa hình học của một Fitting trên bản vẽ hiện tại, sau đó đẩy ngược bản cập nhật đó vào lại Thư viện để ghi đè hình dáng cũ.
+The hub for searching, managing the central library, and defining new items.
+* **Master Library & Project Library:** Distinct separation between company-wide standard items and project-specific items.
+* **Add Virtual Items & Accessories:** Allows defining non-geometric items (Cables/Wires measured in meters) or virtual Accessories linked to Main Fittings. Supports multi-selection of blocks on CAD (e.g., combining -tv, -fv, -sv views) into a single Part ID.
+* **[Insert to CAD] Button:** Inserts fittings from the library into the active drawing, automatically injecting the `POS_NUM` attribute.
+* **[Push Update] Button:** Edit a fitting's geometry in the current drawing and push the updates back to overwrite the library file.
 
 ## 4. BOM EXPORT & BALLOONING (STEP 4)
-Khu vực xuất khối lượng và tự động hóa ghi chú. Mở cửa sổ **BOM EXPORT** để thao tác:
-* **Scan & Count từ CAD:** Quét bản vẽ để đếm số lượng Fitting. Thuật toán X-Ray sẽ đệ quy vào tận cùng các lớp Block con để tìm Fitting, đồng thời áp dụng các logic tự động đo chiều dài dây cáp (Wire Rope).
-* **Nút [Auto-Assign Positions]:** (Dành cho Panel BOM) Tự động rải số Pos theo từng vùng Panel.
-* **Nút [Sync Pos to CAD]:** Bơm ngược các con số Position từ bảng BOM vào các thẻ Attribute `POS_NUM` đang tàng hình trên bản vẽ.
-* **Nút [Place Smart Balloon]:** Công cụ đánh Balloon thủ công thông minh. Gõ lệnh 1 lần, tia X-Ray sẽ xuyên qua các Block cha để đọc mã `POS_NUM` bên trong Fitting. Hỗ trợ click liên tục, chống lỗi đâm xuyên viền và sử dụng Block `_TagCircle` chuẩn.
-* **Nút [Mass Auto-Balloon]:** "Trùm cuối" đánh Balloon hàng loạt. Kỹ sư chỉ cần quét chọn vùng bản vẽ, hệ thống sẽ tự động lọc Fitting, loại bỏ trùng lặp, tính toán khoảng cách "từ tính" an toàn và xếp các Balloon thẳng tắp ở ngoài mép bản vẽ mà không bị đè lên nhau.
+The area for quantity takeoff and automated annotations. Open the **BOM EXPORT** window to operate:
+* **Scan & Count from CAD:** The X-Ray algorithm recursively scans the drawing to count fittings. **The system automatically recognizes Parent-Child accessory links, calculates total lengths for virtual items, and smartly ignores auxiliary views (`-fv`, `-sv`, `-iso`) to prevent overcounting.**
+* **[Auto-Assign Positions] Button:** Automatically generates sequential Position Numbers (e.g., 001, 002...) and groups accessories under their Parent Fitting.
+* **[Sync Pos to CAD] Button:** Injects the Position Numbers from the BOM matrix back into the hidden `POS_NUM` attributes in CAD. Grouped items are merged (e.g., `001,002,003`).
+* **[Place Smart Balloon] Button:** A 1-click annotation tool. Automatically generates **Stacked Balloons** for fittings with accessories and utilizes standard `_TagCircle` blocks.
+* **[Mass Auto-Balloon] Button:** The ultimate batch-ballooning tool. Simply select a boundary, and the system filters fittings, removes duplicates, calculates magnetic spacing, and perfectly aligns stacked balloons along the margins without overlapping.
+* **Excel Export:** Generates a clean BOM table with strict `00x` formatting and visual hierarchy (Accessories are indented directly beneath their Main Fitting).
 
 ## 5. BLOCK UTILITIES
-Các công cụ phụ trợ giúp Kỹ sư sửa đổi Block cực nhanh mà không cần Explode (phá khối), tránh nguy cơ làm mất dữ liệu Attribute:
-* **Sync/Redefine Blocks:** Đồng bộ lại hình dáng Block từ Thư viện.
-* **Smart Replace (Spatial):** Thay thế Block cũ bằng Block mới ngay tại tọa độ hiện tại.
-* **Change Insertion Point:** Đổi gốc tọa độ Block.
-* **Add / Extract Objects from Block:** Thêm hoặc bóc tách nét vẽ ra khỏi Block.
+Auxiliary tools to rapidly modify blocks directly in the drawing without Exploding them, preserving Attribute integrity:
+* **Rename Block:** A native Command-Line utility to rename definitions or clone blocks. Automatically updates internal `MText` and supports multi-view grouping.
+* **Redefine Blocks:** Synchronizes block definitions from the Library.
+* **Replace Block:** Replaces existing blocks with new ones at their exact current coordinates.
+* **Change Insertion Point:** Redefines the base point of a block.
+* **Add / Extract Objects from Block:** Seamlessly move entities into or out of an existing block definition.

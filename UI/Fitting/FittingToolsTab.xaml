@@ -110,7 +110,7 @@
                     <Button x:Name="BtnOpenBomPreview" Content="Open BOM Export" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,10" Click="BtnOpenBomPreview_Click"/>
                     
                     <TextBlock Text="Ballooning Tools:" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="#FF444444"/>
-                    <Button x:Name="BtnAddBalloon" Content="Place Smart Balloon" Click="BtnAddBalloon_Click" ToolTip="Click continuously to place balloons on fittings"/>
+                    <Button x:Name="BtnAddBalloon" Content="Place Balloon" Click="BtnAddBalloon_Click" ToolTip="Click continuously to place balloons on fittings"/>
                     <Button x:Name="BtnMassBalloon" Content="Mass Auto-Balloon" Click="BtnMassBalloon_Click" ToolTip="Select a boundary to automatically balloon all fittings"/>
                 </StackPanel>
             </GroupBox>
@@ -119,10 +119,10 @@
                 <StackPanel>
                     <TextBlock Text="Modify existing blocks without breaking references. Sync, replace, add or extract nested entities on the fly." Style="{StaticResource HelperTextStyle}"/>
                     
-                    <Button x:Name="BtnRenameCloneBlock" Content="Rename / Clone Block" Click="BtnRenameCloneBlock_Click" FontWeight="SemiBold"/>
+                    <Button x:Name="BtnRenameCloneBlock" Content="Rename Block" Click="BtnRenameCloneBlock_Click" FontWeight="SemiBold"/>
                     
-                    <Button x:Name="BtnRedefineBlocks" Content="Sync / Redefine Blocks" Click="BtnRedefineBlocks_Click"/>
-                    <Button x:Name="BtnSmartReplace" Content="Smart Replace (Spatial)" Click="BtnSmartReplace_Click"/>
+                    <Button x:Name="BtnRedefineBlocks" Content="Redefine Blocks" Click="BtnRedefineBlocks_Click"/>
+                    <Button x:Name="BtnSmartReplace" Content="Replace Block" Click="BtnSmartReplace_Click"/>
                     <Button x:Name="BtnChangeBasePoint" Content="Change Insertion Point" Click="BtnChangeBasePoint_Click"/>
                     <Button x:Name="BtnAddToBlock" Content="Add Objects to Block" Click="BtnAddToBlock_Click"/>
                     <Button x:Name="BtnExtractFromBlock" Content="Extract Objects from Block" Click="BtnExtractFromBlock_Click" Margin="0"/>

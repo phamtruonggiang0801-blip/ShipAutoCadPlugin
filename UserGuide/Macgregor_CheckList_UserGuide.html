@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng dẫn sử dụng MacGregor QA/QC Checklist</title>
+    <style>
+        :root {
+            --primary-color: #005E9E;
+            --success-color: #4CAF50;
+            --warning-color: #FFB300;
+            --danger-color: #D32F2F;
+            --text-color: #333;
+            --bg-color: #F8F9FA;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #E9ECEF;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: #FFF;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: var(--primary-color);
+        }
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            border-left: 5px solid var(--primary-color);
+            padding-left: 15px;
+            background-color: #f0f7fb;
+            padding: 10px 15px;
+            margin-top: 40px;
+        }
+        .note {
+            background-color: #FFF3CD;
+            border-left: 5px solid var(--warning-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .success-box {
+            background-color: #D4EDDA;
+            border-left: 5px solid var(--success-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .admin-section {
+            background-color: #F8D7DA;
+            border: 2px dashed var(--danger-color);
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+        .admin-section h2 {
+            background-color: transparent;
+            color: var(--danger-color);
+            border-left-color: var(--danger-color);
+            margin-top: 0;
+        }
+        ol, ul {
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: Consolas, monospace;
+            color: #d63384;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .badge.cad { background-color: #D32F2F; }
+        .badge.inv { background-color: #F57C00; }
+        .faq-question {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 20px;
+        }
+        .faq-answer {
+            margin-left: 20px;
+            border-left: 2px solid #ccc;
+            padding-left: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>HƯỚNG DẪN SỬ DỤNG MACGREGOR CHECKLIST</h1>
+    
+    <p>Chào mừng bạn đến với tài liệu hướng dẫn sử dụng công cụ <strong>MacGregor Checklist</strong>. Add-in này được thiết kế để chuẩn hóa và tự động hóa quy trình kiểm tra bản vẽ (Quality Assurance / Quality Control) trực tiếp trên nền tảng <strong>AutoCAD</strong> và <strong>Autodesk Inventor</strong> trước khi phát hành (Release) lên hệ thống Vault.</p>
+
+    <div class="note">
+        <strong>Lưu ý về Phân loại Bản vẽ:</strong> Công cụ Checklist này <strong>CHỈ BẮT BUỘC</strong> đối với các <strong>Bản vẽ Main (Bản vẽ cuối cùng cần Release)</strong>. Đối với các bản vẽ Global (WIP) dùng để chia sẻ và phối hợp nhóm, kỹ sư có thể bỏ qua bước kiểm tra này.
+    </div>
+
+    <h2>1. Hướng dẫn Cài đặt & Khởi chạy (Dành cho Người dùng)</h2>
+    
+    <h3><span class="badge cad">AutoCAD</span> Đối với người dùng AutoCAD</h3>
+    <ol>
+        <li>Tải thư mục chứa Tool (bao gồm file <code>ShipAutoCadPlugin.dll</code>) về máy và lưu ở một vị trí cố định (VD: <code>C:\MacGregor_CAD_Tools\</code>).</li>
+        <li>Mở phần mềm AutoCAD và mở một bản vẽ bất kỳ.</li>
+        <li>Gõ lệnh <code>NETLOAD</code> vào thanh Command Line và nhấn Enter.</li>
+        <li>Duyệt đến thư mục lưu trữ, chọn file <code>ShipAutoCadPlugin.dll</code> và nhấn <strong>Open</strong>. (Nếu có bảng cảnh báo bảo mật hiện ra, hãy chọn <em>Always Load</em>).</li>
+        <li>Sau khi load thành công, gõ lệnh mở giao diện (VD: <code>MACGREGOR_CAD_TOOL</code> - tùy thuộc vào tên lệnh khai báo trong tool) để gọi thanh Palette lên màn hình.</li>
+    </ol>
+
+    <h3><span class="badge inv">Inventor</span> Đối với người dùng Autodesk Inventor</h3>
+    <ol>
+        <li>Đảm bảo đã tắt hẳn phần mềm Autodesk Inventor.</li>
+        <li>Tải file cài đặt về, bạn sẽ có 2 file quan trọng: <code>ShipAutoCadPlugin.dll</code> và <code>ShipAutoCadPlugin.addin</code>.</li>
+        <li>Copy file <code>ShipAutoCadPlugin.addin</code> và dán vào thư mục theo đường dẫn sau:<br>
+            <code>%AppData%\Roaming\Autodesk\Inventor Addins\</code> <br>
+            <em>(Lưu ý: AppData là thư mục ẩn của Windows, bạn có thể copy thẳng đường dẫn trên dán vào thanh địa chỉ).</em></li>
+        
+        <li>Mở Inventor, mở một bản vẽ Drawing (<code>.idw</code> hoặc <code>.dwg</code>). Bạn sẽ thấy một Tab mới tên là <strong>MacGregor</strong> trên thanh Ribbon. Bấm nút <strong>MacGregor Tools</strong> để mở giao diện.</li>
+    </ol>
+
+    <h2>2. Hướng dẫn Sử dụng Checklist</h2>
+
+    <p>Sau khi khởi chạy công cụ, hãy chuyển sang tab <strong>DRAWING</strong> trên giao diện chính.</p>
+
+    <h3>Bước 1: Mở Checklist</h3>
+    <ul>
+        <li>Chọn loại bản vẽ hiện tại (VD: Structure, Layout,...).</li>
+        <li>Bấm nút <strong>OPEN CHECKLIST</strong>.</li>
+    </ul>
+
+    <h3>Bước 2: Thực hiện kiểm tra</h3>
+    <ul>
+        <li>Một cửa sổ Popup sẽ hiện ra danh sách các tiêu chí cần kiểm tra. Hãy đối chiếu với bản vẽ của bạn và tick vào các ô tương ứng.</li>
+        <li>Thanh Tiến trình (Progress Bar) sẽ hiển thị % hoàn thành.</li>
+        <li>Bạn có thể thêm các câu hỏi kiểm tra bổ sung bằng cách gõ vào ô <em>Add Custom Item</em> và bấm nút <strong>+</strong>.</li>
+        <li>Nếu chưa kiểm tra xong, bạn có thể bấm <strong>Save Draft</strong>. Thông tin sẽ được lưu ẩn vào bản vẽ, bạn có thể tắt máy và mở lại kiểm tra tiếp vào hôm sau mà không bị mất dữ liệu.</li>
+    </ul>
+
+    <h3>Bước 3: Ký duyệt (Sign & Approve)</h3>
+    <ul>
+        <li>Khi bạn đã tick đủ <strong>100%</strong> các mục, nút <strong>SIGN & APPROVE DRAWING</strong> sẽ sáng lên màu xanh.</li>
+        <li>Bấm vào nút này để chốt kiểm tra. Hệ thống sẽ lưu Tên máy tính của bạn và Thời gian duyệt vào hệ thống.</li>
+        <li><strong>Kết quả:</strong> Một dòng chữ màu xanh lá <strong>CheckList Passed</strong> sẽ tự động được chèn vào góc tọa độ (0,0) trên lớp mực Không in (Defpoints / Non-plotting layer) của bản vẽ.</li>
+    </ul>
+
+    <div class="success-box">
+        <strong>Hoàn tất:</strong> Bây giờ bản vẽ Main của bạn đã đạt chuẩn nội bộ và sẵn sàng để Check-in lên Vault để xin Release!
+    </div>
+
+    <div class="admin-section">
+        <h2>3. Tích hợp Vault: Tự động hóa chặn Release 100% (Dành cho IT / Vault Admin)</h2>
+        <p>Hiện tại, Kỹ sư đã có công cụ để thực hiện Checklist. Để hệ thống đạt mức tự động hóa 100%, chúng ta cần <strong>ngăn chặn (block)</strong> người duyệt bấm nút chuyển trạng thái sang <strong>Released</strong> trên Vault nếu bản vẽ Main đó chưa được Approve.</p>
+        
+        <p>Vì Add-in không có quyền can thiệp vào máy chủ Vault, bộ phận IT / Vault Admin vui lòng thực hiện 3 bước cấu hình nhanh gọn sau đây trên giao diện Vault Professional (Chỉ mất khoảng 5 phút):</p>
+
+        <ol>
+            <li><strong>Tạo thuộc tính trên Vault:</strong>
+                <ul>
+                    <li>Vào <em>Tools > Administration > Vault Settings > Behaviors > Properties</em>.</li>
+                    <li>Tạo một Property mới tên là <code>QA Status</code> (Kiểu dữ liệu: Text).</li>
+                </ul>
+            </li>
+            <li><strong>Ánh xạ (Mapping) dữ liệu từ CAD:</strong>
+                <ul>
+                    <li>Chuyển sang tab <strong>Mapping</strong> của Property vừa tạo.</li>
+                    <li>Cấu hình Entity: <code>File</code>.</li>
+                    <li>Provider: Chọn <code>AutoCAD</code> hoặc <code>Inventor</code>.</li>
+                    <li>File Property: Nhập chính xác tên biến là <code>MacGregor_QA</code> (Đây là biến ẩn mà Add-in CAD tự sinh ra khi Kỹ sư bấm Approve).</li>
+                    <li>Direction: <code>File -> Vault</code>.</li>
+                </ul>
+            </li>
+            <li><strong>Khóa van an toàn (Lifecycle Criteria):</strong>
+                <ul>
+                    <li>Vào <em>Vault Settings > Behaviors > Lifecycles</em>. Edit Lifecycle đang dùng cho bản vẽ Main.</li>
+                    <li>Chọn chuyển giao (Transition) từ trạng thái <strong>Work in Progress -> Released</strong> và bấm Edit.</li>
+                    <li>Chuyển sang tab <strong>Criteria</strong>. Thêm một điều kiện bắt buộc: <strong><code>QA Status</code> <code>is</code> <code>APPROVED</code></strong>.</li>
+                </ul>
+            </li>
+        </ol>
+        <p><em>Kết quả: Khi người duyệt bấm "Change State -> Released" cho một bản vẽ chưa làm Checklist, Vault sẽ hiện bảng lỗi màu đỏ chặn lại yêu cầu Kỹ sư phải mở CAD lên tick Checklist. Quy trình khép kín hoàn toàn!</em></p>
+    </div>
+
+    <h2>4. Câu hỏi thường gặp (FAQ) & Khắc phục sự cố</h2>
+
+    <div class="faq-question">Q: Tôi đã load Add-in trong Inventor nhưng không thấy Tab MacGregor xuất hiện?</div>
+    <div class="faq-answer">
+        A: Hãy vào mục <strong>Tools > Add-Ins</strong> trong Inventor. Tìm tên <code>MacGregor Fitting Tools</code>. Hãy đảm bảo rằng bạn đã tick chọn vào 2 ô: <strong>Loaded/Unloaded</strong> và <strong>Load Automatically</strong> ở góc dưới bên phải, sau đó bấm OK.
+    </div>
+
+    <div class="faq-question">Q: Tôi có thể lách luật bằng cách Copy chữ "CheckList Passed" từ bản vẽ cũ sang bản vẽ mới được không?</div>
+    <div class="faq-answer">
+        A: <strong>Không thể.</strong> Hệ thống được trang bị thuật toán "Auto-Purge". Dù bạn có cố tình copy chữ đó sang bản vẽ mới, thì ngay khi bạn hoặc người duyệt mở Tab DRAWING lên, Tool sẽ quét dữ liệu ẩn ngầm. Nếu phát hiện thiếu lịch sử tick box, Tool sẽ tự động xóa sổ dòng chữ giả mạo đó ngay lập tức.
+    </div>
+
+    <div class="faq-question">Q: Nếu tôi muốn sửa lại bản vẽ đã được "Sign & Approve" thì làm thế nào?</div>
+    <div class="faq-answer">
+        A: Khi bản vẽ đã Approve, giao diện Checklist sẽ bị khóa. Để mở khóa, bạn hãy bấm vào nút <strong>Reset / Clear Data</strong> ở giao diện chính. Thao tác này sẽ xóa toàn bộ dữ liệu QA và xóa luôn con dấu trên bản vẽ, đưa bản vẽ về trạng thái ban đầu để bạn làm lại từ đầu.
+    </div>
+
+    <div class="faq-question">Q: Làm thế nào tôi biết bản vẽ nào là Main, bản vẽ nào là Global?</div>
+    <div class="faq-answer">
+        A: Quy định đặt tên và cấu trúc thư mục bản vẽ Main và Global được quy định bởi quy trình nội bộ của phòng Thiết kế. Checklist hiện tại chỉ yêu cầu thực hiện thủ tục bắt buộc (Release) đối với bản vẽ Main.
+    </div>
+
+</div>
+
+</body>
+</html>

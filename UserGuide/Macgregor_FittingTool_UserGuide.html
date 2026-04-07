@@ -65,7 +65,7 @@
         p, li {
             font-size: 15px;
         }
-        ul {
+        ul, ol {
             padding-left: 20px;
         }
         li {
@@ -98,6 +98,21 @@
         .callout.success {
             background-color: var(--success-bg);
             border-color: var(--success-border);
+        }
+        .admin-roadmap {
+            background-color: #F8F9FA;
+            border: 2px dashed var(--primary-color);
+            padding: 20px 25px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+        .admin-roadmap h2 {
+            background-color: transparent;
+            color: var(--primary-color);
+            border-left: none;
+            border-bottom: none;
+            margin-top: 0;
+            padding-bottom: 0;
         }
         .img-placeholder {
             background-color: #f0f0f0;
@@ -159,10 +174,12 @@
     </div>
 
     <h2><span class="badge">0</span> CÀI ĐẶT & MÔI TRƯỜNG</h2>
+    <p>Để đảm bảo công cụ hoạt động mượt mà và không bị lỗi đường dẫn, vui lòng làm theo đúng các bước sau:</p>
     <ul>
-        <li><strong>Load Plugin:</strong> Gõ lệnh <kbd>NETLOAD</kbd> trong AutoCAD, tìm đến file <code>ShipAutoCadPlugin.dll</code>. Gõ lệnh <strong>SHIPPROP</strong> để hiện Pallete.</li>
-        <li><strong>Autodesk Inventor:</strong> Để sử dụng tính năng trích xuất 3D (STEP 1), máy tính của bạn <strong>bắt buộc phải cài đặt sẵn Autodesk Inventor</strong>.</li>
-        <li><strong>Thư viện dùng chung (Master Library):</strong> Các block được hệ thống sinh ra và lưu mặc định tại thư mục <code>C:\Temp_BIM_Library</code>. Nếu làm việc nhóm, thư mục này cần được map vào ổ đĩa mạng LAN dùng chung của công ty.</li>
+        <li><strong>Bước 1 - Sao chép hệ thống:</strong> Copy toàn bộ thư mục <code>MacGregor_CAD_Tools</code> (thư mục bạn vừa tải về và giải nén) và dán thẳng vào ổ đĩa gốc <strong>C:\</strong> của máy tính. <em>(Đường dẫn chuẩn bắt buộc phải là: <code>C:\MacGregor_CAD_Tools\</code>)</em>.</li>
+        <li><strong>Bước 2 - Load Plugin vào CAD:</strong> Mở phần mềm AutoCAD và mở một bản vẽ bất kỳ. Gõ lệnh <kbd>NETLOAD</kbd> vào thanh Command, tìm đến đường dẫn <code>C:\MacGregor_CAD_Tools\ShipAutoCadPlugin.dll</code> và nhấn <strong>Open</strong>. <em>(Nếu có bảng cảnh báo bảo mật hiện ra, hãy chọn 'Always Load')</em>.</li>
+        <li><strong>Bước 3 - Khởi chạy:</strong> Gõ lệnh <kbd>SHIPPROP</kbd> (hoặc lệnh tương ứng của tool) để hiển thị Pallete công cụ lên màn hình.</li>
+        <li><strong>Lưu ý về Inventor:</strong> Để sử dụng tính năng trích xuất 3D (STEP 1), máy tính của bạn bắt buộc phải cài đặt sẵn phần mềm Autodesk Inventor.</li>
     </ul>
 
     <h2><span class="badge">⚡</span> QUICK START (Luồng chạy nhanh 3 phút)</h2>
@@ -188,6 +205,19 @@
         <div><strong>Hoàn thiện:</strong> Ra ngoài màn hình CAD, quét chuột dùng <kbd>Mass Auto-Balloon</kbd> để cắm bóng hàng loạt, sau đó quay lại cửa sổ BOM bấm <kbd>Export to Excel</kbd>. Xong!</div>
     </div>
 
+    <div class="admin-roadmap">
+        <h2>🚀 LỘ TRÌNH NÂNG CẤP & TỰ ĐỘNG HÓA HỆ THỐNG (ROADMAP)</h2>
+        <p>Để đảm bảo tính đồng bộ dữ liệu cho toàn bộ phòng thiết kế, sau khi bản Beta này được test và phê duyệt bởi IT, hệ thống sẽ được nâng cấp thêm 2 tính năng quản trị cốt lõi sau:</p>
+        <ol>
+            <li><strong>Lưu trữ Thư viện tập trung (Vault / Shared Drive):</strong><br>
+                Thay vì lưu cục bộ trên ổ C của từng Kỹ sư, thư viện Master Library của Fitting sẽ được chuyển lên hệ thống Autodesk Vault hoặc Shared Drive mạng LAN của công ty. Khi có bất kỳ Fitting nào mới được tạo ra, nó sẽ tự động đồng bộ (Sync) tới tất cả các máy tính của Kỹ sư khác trong thời gian thực (Real-time).
+            </li>
+            <li><strong>Phân quyền quản lý Thư viện (Role-based Access Control):</strong><br>
+                Hệ thống sẽ được thiết lập phân quyền chặt chẽ. Chỉ có <strong>Key User / Admin</strong> mới có quyền <kbd>Thêm mới (Import)</kbd>, <kbd>Chỉnh sửa (Push Update)</kbd> hoặc <kbd>Xóa</kbd> Fitting trong thư viện dùng chung. Các Kỹ sư khác (Draftsman/Designer) sẽ chỉ có quyền Read-only (Chỉ đọc) để <kbd>Insert</kbd> thư viện ra sử dụng. Điều này giúp ngăn chặn việc làm hỏng hoặc thay đổi các tiêu chuẩn Fitting của công ty.
+            </li>
+        </ol>
+    </div>
+
     <h2><span class="badge">STEP 1</span> 3D EXTRACTION (Trích xuất dữ liệu Inventor)</h2>
     <ul>
         <li><strong>Tính năng:</strong> Tự động trích xuất các hình học và siêu dữ liệu (iProperties) từ các file bản vẽ Inventor <code>.idw</code> / <code>.dwg</code> để làm dữ liệu đầu vào cho AutoCAD.</li>
@@ -207,7 +237,6 @@
             <li><kbd>Detail (Hull)</kbd>: Chọn mục này nếu cụm bạn đang nạp là một chi tiết rời, chi tiết vỏ, hoặc vật tư mua ngoài (Accessory) dùng để gắn lên Panel. Việc phân loại sai sẽ làm hỏng cấu trúc cây BOM.</li>
         </ul>
     </div>
-
     
     <ul>
         <li><strong>Thao tác:</strong> Chọn BOM Type -> Bấm <kbd>Import .json files</kbd>.</li>
@@ -220,14 +249,14 @@
     <h2><span class="badge">STEP 3</span> FITTING LIBRARY (Quản lý Thư viện)</h2>
     
     <ul>
-        <li><strong>Master Library vs Project Library:</strong> Master chứa toàn bộ Fitting chuẩn của công ty (Chỉ được thêm/sửa, không được đánh Pos). Project Library dành riêng cho dự án, cho phép đánh số Pos.</li>
+        <li><strong>Master Library vs Project Library:</strong> Master chứa toàn bộ Fitting chuẩn của công ty. Project Library dành riêng cho dự án, cho phép đánh số Pos.</li>
         <li><strong>Global Search:</strong> Tìm kiếm đa từ khóa cực mạnh (VD gõ: <code>sheave 22</code>).</li>
     </ul>
 
     <div class="callout success">
         <strong>Tính năng Đặc biệt: Gom Hình Chiếu & Sub-BOM:</strong>
         <ul>
-            <li><strong>Add from CAD:</strong> Quét nhiều hình chiếu (-tv, -fv, -sv) trên bản vẽ cùng lúc, tool sẽ tự động gom chúng chung vào 1 Part ID. Điều này giúp 3 hình chiếu vật lý tham chiếu chung về 1 dữ liệu BOM duy nhất.</li>
+            <li><strong>Add from CAD:</strong> Quét nhiều hình chiếu (-tv, -fv, -sv) trên bản vẽ cùng lúc, tool sẽ tự động gom chúng chung vào 1 Part ID.</li>
             <li><strong>Sub-BOM / Accessories:</strong> Chọn 1 Fitting chính, bạn có thể gán thêm cho nó các "Phụ kiện ảo" (Ví dụ: Thêm 2 cái cùm, 4 con ốc). Khi xuất BOM, phụ kiện sẽ tự động bám theo Fitting chính.</li>
         </ul>
     </div>
@@ -239,13 +268,12 @@
 
     <h2><span class="badge">STEP 4</span> BOM EXPORT & BALLOONING (Bóc tách & Ghi chú)</h2>
     
-    
-    <p>Thuật toán <strong>X-Ray</strong> sẽ quét xuyên thấu bản vẽ để đếm vật tư. Hệ thống có cơ chế <strong>Chống Đếm Khống</strong>: Nó sẽ tự động bỏ qua các Block có tên kết thúc bằng đuôi <code>-fv</code>, <code>-sv</code> hoặc <code>-iso</code>. Do đó, bạn chỉ được tính tiền trên 1 cụm dù vẽ 3 hình chiếu.</p>
+    <p>Thuật toán <strong>X-Ray</strong> sẽ quét xuyên thấu bản vẽ để đếm vật tư. Hệ thống có cơ chế <strong>Chống Đếm Khống</strong>: Nó sẽ tự động bỏ qua các Block có tên kết thúc bằng đuôi <code>-fv</code>, <code>-sv</code> hoặc <code>-iso</code>.</p>
 
     <ul>
-        <li><kbd>Auto-Assign Positions</kbd>: Tự động cấp số Pos liên tiếp (001, 002...). Số Phụ kiện sẽ tự động bám theo số Mẹ.</li>
+        <li><kbd>Auto-Assign Positions</kbd>: Tự động cấp số Pos liên tiếp (001, 002...). Số Phụ kiện tự động bám theo số Mẹ.</li>
         <li><kbd>Sync Pos to CAD</kbd>: Bơm mã số ngược lại vào bản vẽ. Cụm Mẹ có 2 Phụ kiện sẽ được gộp thành chuỗi <code>"001,002,003"</code>.</li>
-        <li><kbd>Place / Mass Balloon</kbd>: Tự động đọc chuỗi gộp và bung ra thành <strong>Chùm bóng (Stacked Balloons)</strong> liên tiếp. (Lưu ý: Chỉ cắm Balloon vào hình chiếu chính <code>-tv</code>).</li>
+        <li><kbd>Place / Mass Balloon</kbd>: Tự động đọc chuỗi gộp và bung ra thành <strong>Chùm bóng (Stacked Balloons)</strong> liên tiếp. (Chỉ cắm Balloon vào hình chiếu chính <code>-tv</code>).</li>
         <li><kbd>Export Excel</kbd>: Xuất 2 Sheet (Matrix và Data). Phụ kiện tự động thụt lề và in nghiêng. Số Position được ép định dạng Text (<code>@</code>) để giữ số 0 đứng đầu.</li>
     </ul>
 
@@ -254,17 +282,12 @@
     <p>Đây là bộ công cụ quyền năng giúp bạn thao tác với Block hiện có cực nhanh mà không làm vỡ các Attribute tàng hình.</p>
 
     <ul>
-        <li><strong>Rename / Clone Block:</strong> Bấm lệnh, chọn Block. Tool sẽ hỏi bạn muốn <em>Clone (Tạo mới & Thay thế)</em> hay <em>Rename (Đổi tên gốc)</em>. Hệ thống tự động sửa nội dung MText bên trong Block thành tên mới. Nếu Block chưa có MText, nó sẽ tự động tạo Layer <code>Mechanical-AM_9</code> và chèn 1 MText chuẩn ở tọa độ (0, -15, 0).</li>
-        
-        <li><strong>Add Objects to Block:</strong> Chọn Block đích, sau đó quét các nét vẽ rời rạc bên ngoài. Tool sử dụng ma trận nghịch đảo (Inverse Matrix) để hút các nét vẽ đó chui vào bên trong Block mà <em>không làm chúng bị dịch chuyển vị trí trên màn hình</em>. Các nét gốc bên ngoài sẽ tự động bị xóa.</li>
-        
-        <li><strong>Extract Objects from Block:</strong> Bấm lệnh và click liên tục vào các nét vẽ nằm sâu bên trong Block. Hệ thống sẽ bóc tách, nhân bản chúng (dựa trên ma trận nghịch đảo), kéo chúng ra ngoài Model Space và xóa đối tượng gốc ở bên trong. Ấn Enter hoặc Esc để thoát lệnh.</li>
-        
-        <li><strong>Change Insertion Point:</strong> Thay đổi điểm gốc (Base Point) của Block. Hệ thống sử dụng thuật toán ma trận WCS/OCS để dời các nét vẽ bên trong. Đặc biệt, nó tự động bù trừ tọa độ cho <em>TẤT CẢ các Block Reference cùng tên</em> trên bản vẽ để chúng không bị nhảy hình lung tung.</li>
-        
-        <li><strong>Smart Replace (Spatial):</strong> Quét chọn các Block Nguồn (Cũ) và Block Đích (Mới). Hệ thống sẽ dùng <em>Tâm Bounding Box</em> để sắp xếp không gian (từ trên xuống dưới, từ trái qua phải) và tạo quy tắc thay thế (Mapping Rules). Ấn Enter để thay thế toàn bản vẽ (Global), hoặc quét vùng chọn để thay thế cục bộ (Recursive).</li>
-
-        <li><strong>Redefine Blocks:</strong> Đồng bộ định nghĩa Block từ một bản vẽ đang mở khác (Source Drawing). Sử dụng cơ chế khóa kép (Double DocumentLock) và WblockCloneObjects ngầm để nạp dữ liệu an toàn, chống lỗi Fatal Error.</li>
+        <li><strong>Rename / Clone Block:</strong> Bấm lệnh, chọn Block để thay đổi tên hoặc nhân bản. Hệ thống tự động sửa nội dung MText bên trong.</li>
+        <li><strong>Add Objects to Block:</strong> Chọn Block đích, sau đó quét các nét vẽ rời rạc bên ngoài. Các đối tượng sẽ được gộp vào block mà không bị lệch tọa độ.</li>
+        <li><strong>Extract Objects from Block:</strong> Bấm lệnh và click liên tục vào các nét vẽ nằm sâu bên trong Block để kéo chúng ra Model Space.</li>
+        <li><strong>Change Insertion Point:</strong> Thay đổi điểm gốc (Base Point) của Block. Hệ thống tự động bù trừ tọa độ cho TẤT CẢ các Block cùng tên trên bản vẽ.</li>
+        <li><strong>Smart Replace (Spatial):</strong> Quét chọn các Block Nguồn và Đích. Hệ thống dùng Bounding Box để sắp xếp không gian và tự động thay thế hàng loạt.</li>
+        <li><strong>Redefine Blocks:</strong> Đồng bộ định nghĩa Block từ một bản vẽ đang mở khác một cách an toàn.</li>
     </ul>
 
     <h2><span class="badge">?</span> FAQ & KHẮC PHỤC SỰ CỐ (Troubleshooting)</h2>

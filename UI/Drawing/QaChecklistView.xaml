@@ -48,7 +48,7 @@
         </GroupBox>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal">
-            <Button x:Name="BtnOpenChecklist" Content="OPEN QA/QC CHECKLIST" Height="32" Width="200" Background="#FF005E9E" Foreground="White" FontWeight="Bold" Cursor="Hand" Click="BtnOpenChecklist_Click" Margin="0,0,15,0"/>
+            <Button x:Name="BtnOpenChecklist" Content="OPEN CHECKLIST" Height="32" Width="200" Background="#FF005E9E" Foreground="White" FontWeight="Bold" Cursor="Hand" Click="BtnOpenChecklist_Click" Margin="0,0,15,0"/>
             <Button x:Name="BtnReset" Content="Reset / Clear Data" Height="32" Width="130" Background="#FFE1E1E1" BorderBrush="#FFADADAD" Cursor="Hand" Click="BtnReset_Click"/>
         </StackPanel>
     </Grid>

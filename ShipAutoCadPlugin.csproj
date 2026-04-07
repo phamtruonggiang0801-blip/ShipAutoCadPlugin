@@ -7,12 +7,17 @@
     <UseWPF>true</UseWPF> 
     <LangVersion>latest</LangVersion>
     <Platforms>x64</Platforms>
-    <PluginName>SDS</PluginName>
+    <PluginName>ShipAutoCadPlugin</PluginName> <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <Timestamp>$([System.DateTime]::Now.ToString("yyyyMMdd_HHmmss"))</Timestamp>
     <AssemblyName>$(PluginName)_$(Timestamp)</AssemblyName>
-    
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <AssemblyName>$(PluginName)</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

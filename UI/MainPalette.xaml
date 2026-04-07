@@ -26,6 +26,9 @@
             <TabItem Header="FITTING">
                 <local:FittingToolsView/>
             </TabItem>
+            <TabItem Header="DRAWING">
+                <local:QaChecklistView/>
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>
